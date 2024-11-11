@@ -1,0 +1,1559 @@
+{
+  "Job 009- HiWi Raum 003": {
+    "pose": {
+      "translation": [
+        9.34301781991423,
+        -1.6849918353323474,
+        0.0
+      ],
+      "rotation": [
+        0.9999831432153753,
+        0.0,
+        0.0,
+        -0.005806314243843719
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": 0.7070948616398303,
+          "rx": 0.7070948616398305,
+          "ry": -0.004105684175521935,
+          "rz": -0.004105684175521934,
+          "tx": 9.34301781991423,
+          "ty": -1.6849918353323474,
+          "tz": 0.0
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 003_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": -0.4970884144857661,
+          "rx": -0.49708841448576635,
+          "ry": 0.5028947287296092,
+          "rz": 0.5028947287296089,
+          "tx": 9.34301781991423,
+          "ty": -1.6849918353323474,
+          "tz": 0.0
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 003_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.004105684175520792,
+          "rx": 0.004105684175520794,
+          "ry": 0.7070948616398305,
+          "rz": 0.7070948616398303,
+          "tx": 9.34301781991423,
+          "ty": -1.6849918353323474,
+          "tz": 0.0
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 003_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.5028947287296083,
+          "rx": 0.5028947287296084,
+          "ry": 0.4970884144857669,
+          "rz": 0.497088414485767,
+          "tx": 9.34301781991423,
+          "ty": -1.6849918353323474,
+          "tz": 0.0
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 003_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": 7.159117091073207e-16,
+          "rx": 0.9999831432153753,
+          "ry": -0.005806314243843721,
+          "rz": 0.0,
+          "tx": 9.34301781991423,
+          "ty": -1.6849918353323474,
+          "tz": 0.0
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 003_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.9999831432153753,
+          "rx": 8.996056218755022e-16,
+          "ry": -5.223480987231608e-18,
+          "rz": -0.005806314243843719,
+          "tx": 9.34301781991423,
+          "ty": -1.6849918353323474,
+          "tz": 0.0
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 003_05_down.jpg"
+      }
+    ]
+  },
+  "Job 009- HiWi Raum 004": {
+    "pose": {
+      "translation": [
+        18.292408881055458,
+        2.6364882024057072,
+        0.2131639650772249
+      ],
+      "rotation": [
+        0.8203322007262712,
+        8.141410962270411e-07,
+        -6.740908052806358e-05,
+        -0.5718872930105596
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": 0.5800618862745403,
+          "rx": 0.5800630376439204,
+          "ry": -0.40443304838013977,
+          "rz": -0.4043377175442297,
+          "tx": 18.292408881055458,
+          "ty": 2.6364882024057072,
+          "tz": 0.2131639650772249
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 004_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": -0.12418834224704409,
+          "rx": -0.12425656546866852,
+          "ry": 0.6961430443381313,
+          "rz": 0.6960764493986994,
+          "tx": 18.292408881055458,
+          "ty": 2.6364882024057072,
+          "tz": 0.2131639650772249
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 004_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.40443304838013877,
+          "rx": 0.4043377175442291,
+          "ry": 0.5800618862745415,
+          "rz": 0.5800630376439209,
+          "tx": 18.292408881055458,
+          "ty": 2.6364882024057072,
+          "tz": 0.2131639650772249
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 004_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6961430443381311,
+          "rx": 0.6960764493986995,
+          "ry": 0.12418834224704516,
+          "rz": 0.12425656546866949,
+          "tx": 18.292408881055458,
+          "ty": 2.6364882024057072,
+          "tz": 0.2131639650772249
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 004_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": -8.141410956476904e-07,
+          "rx": 0.8203322007262712,
+          "ry": -0.5718872930105597,
+          "rz": 6.740908052765406e-05,
+          "tx": 18.292408881055458,
+          "ty": 2.6364882024057072,
+          "tz": 0.2131639650772249
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 004_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.8203322007262712,
+          "rx": 8.141410969883185e-07,
+          "ry": -6.740908052854995e-05,
+          "rz": -0.5718872930105595,
+          "tx": 18.292408881055458,
+          "ty": 2.6364882024057072,
+          "tz": 0.2131639650772249
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 004_05_down.jpg"
+      }
+    ]
+  },
+  "Job 009- HiWi Raum 005": {
+    "pose": {
+      "translation": [
+        35.31799389185909,
+        4.9011828977537535,
+        0.2778742456272957
+      ],
+      "rotation": [
+        0.8180419209760138,
+        5.225476270016595e-07,
+        -0.00010276098377386016,
+        -0.5751585911431562
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": 0.5784426201200386,
+          "rx": 0.5784433591139797,
+          "ry": -0.4067712030434946,
+          "rz": -0.4066258770665587,
+          "tx": 35.31799389185909,
+          "ty": 4.9011828977537535,
+          "tz": 0.2778742456272957
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 005_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": -0.12139002315072883,
+          "rx": -0.12149330668212979,
+          "ry": 0.6966513752776584,
+          "rz": 0.6965491368415113,
+          "tx": 35.31799389185909,
+          "ty": 4.9011828977537535,
+          "tz": 0.2778742456272957
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 005_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.4067712030434937,
+          "rx": 0.40662587706655806,
+          "ry": 0.5784426201200396,
+          "rz": 0.5784433591139803,
+          "tx": 35.31799389185909,
+          "ty": 4.9011828977537535,
+          "tz": 0.2778742456272957
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 005_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6966513752776582,
+          "rx": 0.6965491368415114,
+          "ry": 0.12139002315072991,
+          "rz": 0.12149330668213079,
+          "tx": 35.31799389185909,
+          "ty": 4.9011828977537535,
+          "tz": 0.2778742456272957
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 005_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": -5.225476264498157e-07,
+          "rx": 0.8180419209760138,
+          "ry": -0.5751585911431563,
+          "rz": 0.00010276098377346227,
+          "tx": 35.31799389185909,
+          "ty": 4.9011828977537535,
+          "tz": 0.2778742456272957
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 005_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.8180419209760138,
+          "rx": 5.225476277375422e-07,
+          "ry": -0.00010276098377437758,
+          "rz": -0.5751585911431563,
+          "tx": 35.31799389185909,
+          "ty": 4.9011828977537535,
+          "tz": 0.2778742456272957
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 005_05_down.jpg"
+      }
+    ]
+  },
+  "Job 009- HiWi Raum 006": {
+    "pose": {
+      "translation": [
+        45.82472031208524,
+        6.477903854229807,
+        0.3554689377656139
+      ],
+      "rotation": [
+        0.8080335616072993,
+        -9.818153444211928e-06,
+        -6.423586838092938e-05,
+        -0.589136452015643
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": 0.5713729533217182,
+          "rx": 0.57135906835596,
+          "ry": -0.4166278018825718,
+          "rz": -0.41653695864631674,
+          "tx": 45.82472031208524,
+          "ty": 6.477903854229807,
+          "tz": 0.3554689377656139
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 006_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": -0.10942134593836028,
+          "rx": -0.10947576365329711,
+          "ry": 0.6986220338223836,
+          "rz": 0.6985479798005584,
+          "tx": 45.82472031208524,
+          "ty": 6.477903854229807,
+          "tz": 0.3554689377656139
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 006_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.416627801882571,
+          "rx": 0.416536958646316,
+          "ry": 0.5713729533217191,
+          "rz": 0.5713590683559606,
+          "tx": 45.82472031208524,
+          "ty": 6.477903854229807,
+          "tz": 0.3554689377656139
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 006_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6986220338223834,
+          "rx": 0.6985479798005584,
+          "ry": 0.1094213459383613,
+          "rz": 0.1094757636532981,
+          "tx": 45.82472031208524,
+          "ty": 6.477903854229807,
+          "tz": 0.3554689377656139
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 006_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": 9.818153444790414e-06,
+          "rx": 0.8080335616072991,
+          "ry": -0.5891364520156429,
+          "rz": 6.423586838050757e-05,
+          "tx": 45.82472031208524,
+          "ty": 6.477903854229807,
+          "tz": 0.3554689377656139
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 006_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.8080335616072992,
+          "rx": -9.818153443460574e-06,
+          "ry": -6.423586838145443e-05,
+          "rz": -0.589136452015643,
+          "tx": 45.82472031208524,
+          "ty": 6.477903854229807,
+          "tz": 0.3554689377656139
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 006_05_down.jpg"
+      }
+    ]
+  },
+  "Job 009- HiWi Raum 007": {
+    "pose": {
+      "translation": [
+        65.36986623661642,
+        10.165719323926172,
+        0.5373177873440766
+      ],
+      "rotation": [
+        0.6610901657315735,
+        5.3738059093937933e-05,
+        -0.00011500751626058305,
+        -0.7503064551624843
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": -0.4674233406185408,
+          "rx": -0.46749933771052743,
+          "ry": 0.5306281050080682,
+          "rz": 0.5304654598187972,
+          "tx": 65.36986623661642,
+          "ty": 10.165719323926172,
+          "tz": 0.5373177873440766
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 007_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.04469251750313203,
+          "rx": 0.04452377192777744,
+          "ry": 0.7057289451756124,
+          "rz": 0.7056676757184456,
+          "tx": 65.36986623661642,
+          "ty": 10.165719323926172,
+          "tz": 0.5373177873440766
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 007_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.5306281050080672,
+          "rx": 0.5304654598187971,
+          "ry": 0.46742334061854224,
+          "rz": 0.4674993377105282,
+          "tx": 65.36986623661642,
+          "ty": 10.165719323926172,
+          "tz": 0.5373177873440766
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 007_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.7057289451756124,
+          "rx": 0.7056676757184456,
+          "ry": -0.044692517503130996,
+          "rz": -0.04452377192777642,
+          "tx": 65.36986623661642,
+          "ty": 10.165719323926172,
+          "tz": 0.5373177873440766
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 007_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": 5.373805909346462e-05,
+          "rx": -0.6610901657315732,
+          "ry": 0.7503064551624842,
+          "rz": -0.00011500751626004591,
+          "tx": 65.36986623661642,
+          "ty": 10.165719323926172,
+          "tz": 0.5373177873440766
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 007_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6610901657315735,
+          "rx": 5.3738059094532666e-05,
+          "ry": -0.00011500751626125806,
+          "rz": -0.7503064551624843,
+          "tx": 65.36986623661642,
+          "ty": 10.165719323926172,
+          "tz": 0.5373177873440766
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 007_05_down.jpg"
+      }
+    ]
+  },
+  "Job 009- HiWi Raum 008": {
+    "pose": {
+      "translation": [
+        53.96419153141212,
+        23.160471225732433,
+        0.20435192965891102
+      ],
+      "rotation": [
+        -0.3662951633293666,
+        -6.508256565345308e-05,
+        5.640932225778119e-05,
+        0.9304987081687758
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": -0.25896377358251854,
+          "rx": -0.25905581422953977,
+          "ry": 0.6580018338457544,
+          "rz": 0.657922059017173,
+          "tx": 53.96419153141212,
+          "ty": 23.160471225732433,
+          "tz": 0.20435192965891102
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 008_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.2821625183636596,
+          "rx": 0.2820410264757483,
+          "ry": 0.6483925991273739,
+          "rz": 0.6484012723707692,
+          "tx": 53.96419153141212,
+          "ty": 23.160471225732433,
+          "tz": 0.20435192965891102
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 008_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6580018338457538,
+          "rx": 0.6579220590171729,
+          "ry": 0.25896377358251976,
+          "rz": 0.2590558142295407,
+          "tx": 53.96419153141212,
+          "ty": 23.160471225732433,
+          "tz": 0.20435192965891102
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 008_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6483925991273741,
+          "rx": 0.6484012723707696,
+          "ry": -0.28216251836365863,
+          "rz": -0.28204102647574736,
+          "tx": 53.96419153141212,
+          "ty": 23.160471225732433,
+          "tz": 0.20435192965891102
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 008_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": 6.508256565313427e-05,
+          "rx": -0.3662951633293667,
+          "ry": 0.9304987081687758,
+          "rz": -5.6409322257046936e-05,
+          "tx": 53.96419153141212,
+          "ty": 23.160471225732433,
+          "tz": 0.20435192965891102
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 008_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": -0.36629516332936674,
+          "rx": -6.50825656537984e-05,
+          "ry": 5.6409322258625514e-05,
+          "rz": 0.9304987081687757,
+          "tx": 53.96419153141212,
+          "ty": 23.160471225732433,
+          "tz": 0.20435192965891102
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 008_05_down.jpg"
+      }
+    ]
+  },
+  "Job 009- HiWi Raum 009": {
+    "pose": {
+      "translation": [
+        31.365969981393896,
+        19.86962709317156,
+        0.04795357800732086
+      ],
+      "rotation": [
+        -0.443710824133666,
+        -3.1399705868852866e-05,
+        5.562815514268016e-05,
+        0.8961700176117197
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": -0.3137287296858397,
+          "rx": -0.31377313557573405,
+          "ry": 0.6337272315950411,
+          "rz": 0.6336485615035883,
+          "tx": 31.365969981393896,
+          "ty": 19.86962709317156,
+          "tz": 0.04795357800732086
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 009_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.226273110669532,
+          "rx": 0.22618608280852048,
+          "ry": 0.6699525350973301,
+          "rz": 0.669928306648056,
+          "tx": 31.365969981393896,
+          "ty": 19.86962709317156,
+          "tz": 0.04795357800732086
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 009_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6337272315950403,
+          "rx": 0.6336485615035881,
+          "ry": 0.31372872968584087,
+          "rz": 0.31377313557573505,
+          "tx": 31.365969981393896,
+          "ty": 19.86962709317156,
+          "tz": 0.04795357800732086
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 009_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6699525350973303,
+          "rx": 0.6699283066480564,
+          "ry": -0.22627311066953107,
+          "rz": -0.22618608280851954,
+          "tx": 31.365969981393896,
+          "ty": 19.86962709317156,
+          "tz": 0.04795357800732086
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 009_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": 3.1399705868535194e-05,
+          "rx": -0.443710824133666,
+          "ry": 0.8961700176117195,
+          "rz": -5.562815514203856e-05,
+          "tx": 31.365969981393896,
+          "ty": 19.86962709317156,
+          "tz": 0.04795357800732086
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 009_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": -0.443710824133666,
+          "rx": -3.1399705869252035e-05,
+          "ry": 5.562815514348637e-05,
+          "rz": 0.8961700176117197,
+          "tx": 31.365969981393896,
+          "ty": 19.86962709317156,
+          "tz": 0.04795357800732086
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 009_05_down.jpg"
+      }
+    ]
+  },
+  "Job 009- HiWi Raum 010": {
+    "pose": {
+      "translation": [
+        31.366234371551617,
+        19.869623668424165,
+        0.047983160291859596
+      ],
+      "rotation": [
+        -0.4437146247503752,
+        -4.0755396497081165e-05,
+        6.466449765069877e-05,
+        0.896168134860939
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": -0.31372480165540145,
+          "rx": -0.3137824384898677,
+          "ry": 0.6337322899482614,
+          "rz": 0.6336408405386796,
+          "tx": 31.366234371551617,
+          "ty": 19.869623668424165,
+          "tz": 0.047983160291859596
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 010_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.2262794650023553,
+          "rx": 0.22617404510820754,
+          "ry": 0.6699533343562342,
+          "rz": 0.6699294252550805,
+          "tx": 31.366234371551617,
+          "ty": 19.869623668424165,
+          "tz": 0.047983160291859596
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 010_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6337322899482607,
+          "rx": 0.6336408405386791,
+          "ry": 0.31372480165540256,
+          "rz": 0.3137824384898686,
+          "tx": 31.366234371551617,
+          "ty": 19.869623668424165,
+          "tz": 0.047983160291859596
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 010_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.6699533343562345,
+          "rx": 0.6699294252550807,
+          "ry": -0.2262794650023544,
+          "rz": -0.2261740451082065,
+          "tx": 31.366234371551617,
+          "ty": 19.869623668424165,
+          "tz": 0.047983160291859596
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 010_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": 4.075539649678883e-05,
+          "rx": -0.44371462475037493,
+          "ry": 0.896168134860939,
+          "rz": -6.466449765005268e-05,
+          "tx": 31.366234371551617,
+          "ty": 19.869623668424165,
+          "tz": 0.047983160291859596
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 010_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": -0.4437146247503752,
+          "rx": -4.07553964975057e-05,
+          "ry": 6.46644976515005e-05,
+          "rz": 0.8961681348609392,
+          "tx": 31.366234371551617,
+          "ty": 19.869623668424165,
+          "tz": 0.047983160291859596
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 010_05_down.jpg"
+      }
+    ]
+  },
+  "Job 009- HiWi Raum 011": {
+    "pose": {
+      "translation": [
+        5.349217603127155,
+        16.146725646947885,
+        -0.0421990545706137
+      ],
+      "rotation": [
+        0.014217615152430925,
+        -4.455260745063175e-05,
+        4.5816368174757286e-05,
+        0.999898922559327
+      ]
+    },
+    "images": [
+      {
+        "pose": {
+          "rw": 0.010084875537432418,
+          "rx": 0.010021868635736649,
+          "ry": 0.7070677057074485,
+          "rz": 0.7070029115781973,
+          "tx": 5.349217603127155,
+          "ty": 16.146725646947885,
+          "tz": -0.0421990545706137
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "00_front",
+        "file": "Job 009- HiWi Raum 011_00_front.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.5071034533436912,
+          "rx": 0.5070130843680658,
+          "ry": 0.49284128558381046,
+          "rz": 0.49284002182308617,
+          "tx": 5.349217603127155,
+          "ty": 16.146725646947885,
+          "tz": -0.0421990545706137
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "01_right",
+        "file": "Job 009- HiWi Raum 011_01_right.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.7070677057074483,
+          "rx": 0.7070029115781971,
+          "ry": -0.010084875537431271,
+          "rz": -0.010021868635735504,
+          "tx": 5.349217603127155,
+          "ty": 16.146725646947885,
+          "tz": -0.0421990545706137
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "02_back",
+        "file": "Job 009- HiWi Raum 011_02_back.jpg"
+      },
+      {
+        "pose": {
+          "rw": -0.49284128558381113,
+          "rx": -0.49284002182308706,
+          "ry": 0.5071034533436906,
+          "rz": 0.507013084368065,
+          "tx": 5.349217603127155,
+          "ty": 16.146725646947885,
+          "tz": -0.0421990545706137
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "03_left",
+        "file": "Job 009- HiWi Raum 011_03_left.jpg"
+      },
+      {
+        "pose": {
+          "rw": 4.455260745060056e-05,
+          "rx": 0.01421761515243097,
+          "ry": 0.9998989225593269,
+          "rz": -4.58163681740595e-05,
+          "tx": 5.349217603127155,
+          "ty": 16.146725646947885,
+          "tz": -0.0421990545706137
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "04_up",
+        "file": "Job 009- HiWi Raum 011_04_up.jpg"
+      },
+      {
+        "pose": {
+          "rw": 0.014217615152430939,
+          "rx": -4.455260745061897e-05,
+          "ry": 4.5816368175656815e-05,
+          "rz": 0.999898922559327,
+          "tx": 5.349217603127155,
+          "ty": 16.146725646947885,
+          "tz": -0.0421990545706137
+        },
+        "intrinsics": {
+          "focalLength": 0.006140999824858135,
+          "imageHeight": 2048,
+          "imageWidth": 2048,
+          "pixelHeight": 6e-06,
+          "pixelWidth": 6e-06,
+          "principalPointX": 1023.5,
+          "principalPointY": 1023.5,
+          "sensorWidth": 0.012288,
+          "sensorHeight": 0.012288,
+          "focalLengthPixelsX": 1023.4999708096892,
+          "focalLengthPixelsY": 1023.4999708096892
+        },
+        "facing": "05_down",
+        "file": "Job 009- HiWi Raum 011_05_down.jpg"
+      }
+    ]
+  }
+}

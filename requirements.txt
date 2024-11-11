@@ -1,0 +1,8 @@
+opencv-contrib-python
+pyglet<2
+rtree
+scipy
+numpy
+matplotlib
+pye57
+pillow

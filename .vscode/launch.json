@@ -1,0 +1,20 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug reloc",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "relocalization.py",
+            "console": "integratedTerminal",
+            "args": [
+                "${workspaceFolder}/data/scan_imgs/Job 009- HiWi Raum 004_00_front.jpg",
+                "${workspaceFolder}/data/images/*.jpg",
+                "--show"
+            ]
+        }
+    ]
+}
