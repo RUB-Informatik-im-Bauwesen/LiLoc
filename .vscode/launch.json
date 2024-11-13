@@ -8,11 +8,11 @@
             "name": "Debug reloc",
             "type": "debugpy",
             "request": "launch",
-            "program": "relocalization.py",
+            "program": "feature_matching.py",
             "console": "integratedTerminal",
             "args": [
-                "${workspaceFolder}/data/scan_imgs/Job 009- HiWi Raum 004_00_front.jpg",
-                "${workspaceFolder}/data/images/*.jpg",
+                "${workspaceFolder}/data/scan_imgs/",
+                "${workspaceFolder}/data/images/",
                 "--show"
             ]
         }
