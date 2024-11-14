@@ -1,26 +1,21 @@
-
+# import matplotlib.pyplot as plt
+import argparse
+import coloredlogs
+import glob
+import logging
+import os
+import pathlib
+import sys
+import uuid
 
 import cv2
-from cv2 import xfeatures2d
-import numpy as np
-# import matplotlib.pyplot as plt
-from PIL import Image
-import argparse, json
-import sys
-import glob
-import uuid
-import logging
-import pathlib
-from logging import info, error, warning, debug
-from helpers import NumpyArrayEncoder
 
-logging.basicConfig(
-    level=
-        logging.DEBUG
-        # logging.INFO
-)
+# Create a logger object.
+log = logging.getLogger(__name__)
+coloredlogs.install(logger=log, level=logging.DEBUG)
 
-def read_images(in_imgs: list, max_image_size: int) -> dict:
+
+def read_images(in_imgs: list, max_image_size: int = 0) -> dict:
     """
     Reads a list of images and returns a dictionary with unique identifiers as keys and image data as values.
 
@@ -30,7 +25,8 @@ def read_images(in_imgs: list, max_image_size: int) -> dict:
     logs debug and warning messages during the process.
 
     Args:
-        imgs (list): A list of image objects or file paths.
+        in_imgs (list): A list of image objects or file paths.
+        max_image_size (int): If positive, resizes the images while keeping the aspect ratio
 
     Returns:
         dict: A dictionary with unique identifiers (UUIDs or file names) as keys and image data as values.
@@ -40,20 +36,24 @@ def read_images(in_imgs: list, max_image_size: int) -> dict:
         try:
             if isinstance(in_img, cv2.Mat):
                 new_id = uuid.uuid4()
-                debug("Assigning new id {} to image", new_id)
+                log.debug("Assigning new id %s to image", new_id)
                 imgs[new_id] = resize_image(in_img, max_image_size)
             else:
-                file_id = in_img.split("/")[-1].split(".")[0]
-                debug("Reading image %s as id %s", in_img, file_id)
+                file_id = in_img.split(os.sep)[-1].split(".")[0]
+                log.debug("Reading image %s as id %s", in_img, file_id)
                 if file_id in imgs:
-                    warning("Image with the name %s already present in data base. Skipping...", file_id)
+                    log.warning("Image with the name %s already present in data base. Skipping...", file_id)
                     continue
                 im = cv2.imread(str(in_img))
-                imgs[file_id] = resize_image(im, max_image_size)
+                if max_image_size > 0:
+                    imgs[file_id] = resize_image(im, max_image_size)
+                else:
+                    imgs[file_id] = im
         except Exception as e:
-            warning("Could not read image %s: %s", in_img, str(e))
+            log.warning("Could not read image %s: %s", in_img, str(e))
 
     return imgs
+
 
 def resize_image(image, max_size):
     """
@@ -84,26 +84,29 @@ def resize_image(image, max_size):
 
     return resized_image
 
+
 class FeatureMatching():
     def __init__(self, pan_imgs, in_imgs, max_image_size=2048):
         self.pan_imgs = pan_imgs
         self.in_imgs = in_imgs
 
-        self._feature_cache = {}
+        self.pano_features = {}
+        self.in_img_features = {}
 
-        info("Reading panoramic images")
+        log.info("Reading panoramic images")
         self.pan_imgs = read_images(pan_imgs, max_image_size)
 
-        info("Reading input images")
+        log.info("Reading input images")
         self.in_imgs = read_images(in_imgs, max_image_size)
         
-        info("Finished reading images")
+        log.info("Finished reading images")
+
 
     def find_features(self):
-        info("Finding features in panoramic images")
-        self.pano_featurs = self._find_features(self.pan_imgs)
-        info("Finding features in input images")
-        self.in_imgs = self._find_features(self.in_imgs)
+        log.info("Finding features in panoramic images")
+        self.pano_features = self._find_features(self.pan_imgs)
+        log.info("Finding features in input images")
+        self.in_img_features = self._find_features(self.in_imgs)
 
     def _find_features(self, img_db: dict):
         sift = getattr(self, "sift", cv2.SIFT.create())
@@ -114,7 +117,7 @@ class FeatureMatching():
             in_img = img_db[key]
             features = sift.detectAndCompute(in_img, None)
             feat_dict[key] = features
-            debug("Found %6d features in image %s", len(features[0]), key)
+            log.debug("Found %6d features in image %s", len(features[0]), key)
         return feat_dict
 
 
@@ -135,14 +138,14 @@ if __name__ == '__main__':
     panoramic_images_path: pathlib.Path = args.panoramic_image_folder
 
     if not panoramic_images_path.exists():
-        error(f"Cannot find panoramic image folder at {panoramic_images_path}")
+        log.error(f"Cannot find panoramic image folder at {panoramic_images_path}")
         sys.exit(1)
 
     if not input_images_path.exists():
-        error(f"Cannot find input image folder at {input_images_path}")
+        log.error(f"Cannot find input image folder at {input_images_path}")
         sys.exit(1)
 
-    file_types = ["jpg", "png", "JPG", "JPEG", "PNG"]
+    file_types = ["jpg", "png", "jpeg"]
 
     input_images = []
     for file_ext in file_types:

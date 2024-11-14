@@ -6,3 +6,4 @@ numpy
 matplotlib
 pye57
 pillow
+coloredlogs
