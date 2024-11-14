@@ -35,15 +35,17 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> dict:
         max_image_size (int): If positive, resizes the images while keeping the aspect ratio
 
     Returns:
-        dict: A dictionary with unique identifiers (UUIDs or file names) as keys and image data as values.
+        (list, dict): A list with unique identifiers (UUIDs or file names) and a dictionary with the keys as indices and image data as values.
     """
     imgs = {}
+    keys = []
     for in_img in in_imgs:
         try:
             if isinstance(in_img, cv2.Mat):
                 new_id = uuid.uuid4()
                 log.debug("Assigning new id %s to image", new_id)
                 imgs[new_id] = resize_image(in_img, max_image_size)
+                keys.append(new_id)
             else:
                 file_id = in_img.split(os.sep)[-1].split(".")[0]
                 log.debug("Reading image %s as id %s", in_img, file_id)
@@ -55,10 +57,11 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> dict:
                     imgs[file_id] = resize_image(im, max_image_size)
                 else:
                     imgs[file_id] = im
+                keys.append(file_id)
         except Exception as e:
             log.warning("Could not read image %s: %s", in_img, str(e))
 
-    return imgs
+    return keys, imgs
 
 
 def resize_image(image, max_size):
@@ -149,19 +152,47 @@ def load_keypoint_cache(name, cache_dir):
     return keypoints, descriptors
 
 
+def match_points(pts1, des1, pts2, des2):
+    flann = cv2.FlannBasedMatcher(dict(algorithm=1, trees=10), dict(checks=500))
+    matches = flann.knnMatch(des1, des2, k=2)
+
+    # bf = cv2.BFMatcher()
+    # matches = bf.knnMatch(des1,des2,k=2)
+
+    # Need to draw only good matches, so create a mask
+    matches_mask = [[0, 0] for i in range(len(matches))]
+    # ratio test as per Lowe's paper
+    good = []
+    for i, (m, n) in enumerate(matches):
+        if m.distance < 0.7 * n.distance:
+            good.append(m)
+            matches_mask[i] = [1, 0]
+
+    MIN_MATCH_COUNT = 30
+    if len(good) < MIN_MATCH_COUNT:
+        log.debug("Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT))
+        return matches, None, None
+
+    log.debug(f"Found {len(good)} matches, attempting homography")
+    src_pts = np.float32([pts1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+    dst_pts = np.float32([pts2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+    # matches_mask = mask.ravel().tolist()
+
+    return matches, matches_mask, M
+
+
 class FeatureMatching():
     def __init__(self, pano_imgs, in_imgs, max_image_size=2048):
-        self.pano_imgs = pano_imgs
-        self.in_imgs = in_imgs
-
         self.pano_features = {}
         self.in_img_features = {}
+        self.match_matrix = None
 
         log.info("Reading panoramic images")
-        self.pano_imgs = read_images(pano_imgs, max_image_size)
+        self.pano_img_names, self.pano_imgs = read_images(pano_imgs, max_image_size)
 
         log.info("Reading input images")
-        self.in_imgs = read_images(in_imgs, max_image_size)
+        self.in_img_names, self.in_imgs = read_images(in_imgs, max_image_size)
 
         log.info("Finished reading images")
 
@@ -191,6 +222,20 @@ class FeatureMatching():
             feat_dict[key] = features
             log.debug("Found %6d features in image %s", len(features[0]), key)
         return feat_dict
+
+    def find_matches(self):
+        len_pano = len(self.pano_img_names)
+        len_img = len(self.in_img_names)
+        self.match_matrix = np.empty((len_pano, len_img), dtype=np.object_)
+
+        log.info("Starting matching...")
+        for i_p, pano in enumerate(self.pano_img_names):
+            log.info("%4d/%d matches complete", i_p * len_img, len_pano * len_img)
+            for i_i, img in enumerate(self.in_img_names):
+                pano_pts, pano_des = self.pano_features[pano]
+                img_pts, img_des = self.in_img_features[img]
+                self.match_matrix[i_p, i_i] = match_points(pano_pts, pano_des, img_pts, img_des)
+
 
     def save_to_cache(self, cache_dir="./tmp"):
         try:
@@ -277,6 +322,10 @@ if __name__ == '__main__':
     fm.load_from_cache()
     fm.find_features(skip_existing=True)
     fm.save_to_cache()
+
+    fm.find_matches()
+
+    print(fm.match_matrix)
 
     # pan_img = cv2.imread("/home/patrick/sciebo/BIMKIT_DIENSTKETTE_INFRA1/Kamera-relokalsierung/Daten/RTC360_Abpl m fl Bw und Kiesnest Betonwand_Panorama/Abplatzung,Bewehrung,GKS_0,5m_LR.jpg")
     # in_img = cv2.imread("/home/patrick/sciebo/BIMKIT_DIENSTKETTE_INFRA1/Kamera-relokalsierung/Daten/RTC360_Abpl m fl Bw und Kiesnest Betonwand_Panorama/smartphone-bilder/out.jpg")
