@@ -99,7 +99,7 @@ def save_keypoint_cache(name, keypoints, descriptors, cache_dir):
     kp_points = np.zeros((n_pts, 2), np.float32)
     kp_sizes = np.zeros(n_pts, np.float32)
     kp_angles = np.zeros(n_pts, np.float32)
-    kp_responses = np.zeros(n_pts, np.int32)
+    kp_responses = np.zeros(n_pts, np.float32)
     kp_octaves = np.zeros(n_pts, np.int32)
     kp_classes = np.zeros(n_pts, np.int32)
 
@@ -121,7 +121,8 @@ def save_keypoint_cache(name, keypoints, descriptors, cache_dir):
 
 def load_keypoint_cache(name, cache_dir):
     descriptor_fn = pathlib.Path(cache_dir, name + "_desc.npy")
-    descriptors = np.fromfile(descriptor_fn, dtype=np.float32).reshape(-1, 128)  # Assuming SIFT descriptors with 128 dimensions
+    if not descriptor_fn.exists():
+        return None, None
 
     kp_points = np.fromfile(pathlib.Path(cache_dir, name + "_kp_points.npy"), dtype=np.float32).reshape(-1, 2)
     kp_sizes = np.fromfile(pathlib.Path(cache_dir, name + "_kp_sizes.npy"), dtype=np.float32)
@@ -133,17 +134,20 @@ def load_keypoint_cache(name, cache_dir):
     keypoints = []
     for i in range(len(kp_points)):
         keypoint = cv2.KeyPoint(
-            x=kp_points[i][0],
-            y=kp_points[i][1],
-            size=kp_sizes[i],
-            angle=kp_angles[i],
-            response=kp_responses[i],
-            octave=kp_octaves[i],
-            class_id=kp_classes[i]
+            x=float(kp_points[i][0]),
+            y=float(kp_points[i][1]),
+            size=float(kp_sizes[i]),
+            angle=float(kp_angles[i]),
+            response=float(kp_responses[i]),
+            octave=int(kp_octaves[i]),
+            class_id=int(kp_classes[i])
         )
         keypoints.append(keypoint)
 
+    descriptors = np.fromfile(descriptor_fn, dtype=np.float32).reshape(len(keypoints), -1)
+
     return keypoints, descriptors
+
 
 class FeatureMatching():
     def __init__(self, pano_imgs, in_imgs, max_image_size=2048):
@@ -158,22 +162,30 @@ class FeatureMatching():
 
         log.info("Reading input images")
         self.in_imgs = read_images(in_imgs, max_image_size)
-        
+
         log.info("Finished reading images")
 
-
-    def find_features(self):
+    def find_features(self, skip_existing=False):
         log.info("Finding features in panoramic images")
-        self.pano_features = self._find_features(self.pano_imgs)
-        log.info("Finding features in input images")
-        self.in_img_features = self._find_features(self.in_imgs)
+        _pano_features = self._find_features(self.pano_imgs, self.pano_features.keys() if skip_existing else [])
 
-    def _find_features(self, img_db: dict):
+        log.info("Finding features in input images")
+        _in_img_features = self._find_features(self.in_imgs, self.in_img_features.keys() if skip_existing else [])
+
+        self.pano_features.update(_pano_features)
+        self.in_img_features.update(_in_img_features)
+
+    def _find_features(self, img_db: dict, skip=None):
+        if skip is None:
+            skip = []
+
         sift = getattr(self, "sift", cv2.SIFT.create())
         self.sift = sift
 
         feat_dict = {}
-        for key  in sorted(img_db.keys()):
+        for key in sorted(img_db.keys()):
+            if key in skip:
+                continue
             in_img = img_db[key]
             features = sift.detectAndCompute(in_img, None)
             feat_dict[key] = features
@@ -204,23 +216,26 @@ class FeatureMatching():
 
     def load_from_cache(self, cache_dir="./tmp"):
         cache_path = pathlib.Path(cache_dir).absolute()
-        cache_loaded = False
 
         try:
             if cache_path.exists():
-                log.info("Loading from cache...",)
+                log.info("Loading from cache...", )
                 for key in self.pano_imgs.keys():
-                    self.pano_features[key] = load_keypoint_cache(key, cache_dir)
+                    keypoints, descriptors = load_keypoint_cache(key, cache_dir)
+                    if keypoints is not None:
+                        self.pano_features[key] = (keypoints, descriptors)
                 log.info("%d panoramic image features loaded from cache", len(self.pano_features))
                 for key in self.in_imgs.keys():
-                    self.in_img_features[key] = load_keypoint_cache(key, cache_dir)
+                    keypoints, descriptors = load_keypoint_cache(key, cache_dir)
+                    if keypoints is not None:
+                        self.in_img_features[key] = (keypoints, descriptors)
                 log.info("%d input image features loaded from cache", len(self.in_img_features))
-                cache_loaded = True
             else:
                 log.info("No cache directory found")
         except Exception as e:
             log.error("Could not read cache: %s", str(e), exc_info=e, stack_info=True)
-        return cache_loaded
+            return False
+        return True
 
 
 if __name__ == '__main__':
@@ -259,12 +274,9 @@ if __name__ == '__main__':
 
     fm = FeatureMatching(panoramic_images, input_images)
 
-    success = fm.load_from_cache()
-    if not success:
-        fm.find_features()
-        fm.save_to_cache()
-
-
+    fm.load_from_cache()
+    fm.find_features(skip_existing=True)
+    fm.save_to_cache()
 
     # pan_img = cv2.imread("/home/patrick/sciebo/BIMKIT_DIENSTKETTE_INFRA1/Kamera-relokalsierung/Daten/RTC360_Abpl m fl Bw und Kiesnest Betonwand_Panorama/Abplatzung,Bewehrung,GKS_0,5m_LR.jpg")
     # in_img = cv2.imread("/home/patrick/sciebo/BIMKIT_DIENSTKETTE_INFRA1/Kamera-relokalsierung/Daten/RTC360_Abpl m fl Bw und Kiesnest Betonwand_Panorama/smartphone-bilder/out.jpg")
@@ -281,5 +293,3 @@ if __name__ == '__main__':
     #     output_path.mkdir(parents=True, exist_ok=True)
     # with open(output_path / "out.json", 'w') as f:
     #     json.dump(result, f, indent="\t", cls=NumpyArrayEncoder)
-
-
