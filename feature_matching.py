@@ -1,5 +1,8 @@
 # import matplotlib.pyplot as plt
 import argparse
+import json
+import pickle
+
 import coloredlogs
 import glob
 import logging
@@ -9,9 +12,12 @@ import sys
 import uuid
 
 import cv2
+import numpy as np
+
+from helpers import NumpyArrayEncoder
 
 # Create a logger object.
-log = logging.getLogger(__name__)
+log = logging.getLogger("FeatureMatching")
 coloredlogs.install(logger=log, level=logging.DEBUG)
 
 
@@ -85,16 +91,70 @@ def resize_image(image, max_size):
     return resized_image
 
 
+def save_keypoint_cache(name, keypoints, descriptors, cache_dir):
+    descriptor_fn = pathlib.Path(cache_dir, name + "_desc.npy")
+    descriptors.tofile(descriptor_fn)
+
+    n_pts = len(keypoints)
+    kp_points = np.zeros((n_pts, 2), np.float32)
+    kp_sizes = np.zeros(n_pts, np.float32)
+    kp_angles = np.zeros(n_pts, np.float32)
+    kp_responses = np.zeros(n_pts, np.int32)
+    kp_octaves = np.zeros(n_pts, np.int32)
+    kp_classes = np.zeros(n_pts, np.int32)
+
+    for i, point in enumerate(keypoints):
+        kp_points[i] = point.pt
+        kp_sizes[i] = point.size
+        kp_angles[i] = point.angle
+        kp_responses[i] = point.response
+        kp_octaves[i] = point.octave
+        kp_classes[i] = point.class_id
+
+    kp_points.tofile(pathlib.Path(cache_dir, name + "_kp_points.npy"))
+    kp_sizes.tofile(pathlib.Path(cache_dir, name + "_kp_sizes.npy"))
+    kp_angles.tofile(pathlib.Path(cache_dir, name + "_kp_angles.npy"))
+    kp_responses.tofile(pathlib.Path(cache_dir, name + "_kp_responses.npy"))
+    kp_octaves.tofile(pathlib.Path(cache_dir, name + "_kp_octaves.npy"))
+    kp_classes.tofile(pathlib.Path(cache_dir, name + "_kp_classes.npy"))
+
+
+def load_keypoint_cache(name, cache_dir):
+    descriptor_fn = pathlib.Path(cache_dir, name + "_desc.npy")
+    descriptors = np.fromfile(descriptor_fn, dtype=np.float32).reshape(-1, 128)  # Assuming SIFT descriptors with 128 dimensions
+
+    kp_points = np.fromfile(pathlib.Path(cache_dir, name + "_kp_points.npy"), dtype=np.float32).reshape(-1, 2)
+    kp_sizes = np.fromfile(pathlib.Path(cache_dir, name + "_kp_sizes.npy"), dtype=np.float32)
+    kp_angles = np.fromfile(pathlib.Path(cache_dir, name + "_kp_angles.npy"), dtype=np.float32)
+    kp_responses = np.fromfile(pathlib.Path(cache_dir, name + "_kp_responses.npy"), dtype=np.float32)
+    kp_octaves = np.fromfile(pathlib.Path(cache_dir, name + "_kp_octaves.npy"), dtype=np.int32)
+    kp_classes = np.fromfile(pathlib.Path(cache_dir, name + "_kp_classes.npy"), dtype=np.int32)
+
+    keypoints = []
+    for i in range(len(kp_points)):
+        keypoint = cv2.KeyPoint(
+            x=kp_points[i][0],
+            y=kp_points[i][1],
+            size=kp_sizes[i],
+            angle=kp_angles[i],
+            response=kp_responses[i],
+            octave=kp_octaves[i],
+            class_id=kp_classes[i]
+        )
+        keypoints.append(keypoint)
+
+    return keypoints, descriptors
+
 class FeatureMatching():
-    def __init__(self, pan_imgs, in_imgs, max_image_size=2048):
-        self.pan_imgs = pan_imgs
+    def __init__(self, pano_imgs, in_imgs, max_image_size=2048):
+        self.pano_imgs = pano_imgs
         self.in_imgs = in_imgs
 
         self.pano_features = {}
         self.in_img_features = {}
 
         log.info("Reading panoramic images")
-        self.pan_imgs = read_images(pan_imgs, max_image_size)
+        self.pano_imgs = read_images(pano_imgs, max_image_size)
 
         log.info("Reading input images")
         self.in_imgs = read_images(in_imgs, max_image_size)
@@ -104,7 +164,7 @@ class FeatureMatching():
 
     def find_features(self):
         log.info("Finding features in panoramic images")
-        self.pano_features = self._find_features(self.pan_imgs)
+        self.pano_features = self._find_features(self.pano_imgs)
         log.info("Finding features in input images")
         self.in_img_features = self._find_features(self.in_imgs)
 
@@ -119,6 +179,48 @@ class FeatureMatching():
             feat_dict[key] = features
             log.debug("Found %6d features in image %s", len(features[0]), key)
         return feat_dict
+
+    def save_to_cache(self, cache_dir="./tmp"):
+        try:
+            if len(self.pano_features) > 0:
+                pano_path = pathlib.Path(cache_dir, "pano_features.dat").absolute()
+                pano_path.parent.mkdir(exist_ok=True)
+                for key, vals in self.pano_features.items():
+                    save_keypoint_cache(key, vals[0], vals[1], cache_dir)
+                log.info("%d panoramic image features written to cache", len(self.pano_features))
+            else:
+                log.info("No features in panoramic images to write to cache")
+
+            if len(self.in_img_features) > 0:
+                img_path = pathlib.Path(cache_dir).absolute()
+                img_path.mkdir(exist_ok=True)
+                for key, vals in self.in_img_features.items():
+                    save_keypoint_cache(key, vals[0], vals[1], cache_dir)
+                log.info("%d input image features written to cache", len(self.in_img_features))
+            else:
+                log.info("No features in input images to write to cache")
+        except Exception as e:
+            log.error("Could not write cache: %s", str(e), exc_info=e, stack_info=True)
+
+    def load_from_cache(self, cache_dir="./tmp"):
+        cache_path = pathlib.Path(cache_dir).absolute()
+        cache_loaded = False
+
+        try:
+            if cache_path.exists():
+                log.info("Loading from cache...",)
+                for key in self.pano_imgs.keys():
+                    self.pano_features[key] = load_keypoint_cache(key, cache_dir)
+                log.info("%d panoramic image features loaded from cache", len(self.pano_features))
+                for key in self.in_imgs.keys():
+                    self.in_img_features[key] = load_keypoint_cache(key, cache_dir)
+                log.info("%d input image features loaded from cache", len(self.in_img_features))
+                cache_loaded = True
+            else:
+                log.info("No cache directory found")
+        except Exception as e:
+            log.error("Could not read cache: %s", str(e), exc_info=e, stack_info=True)
+        return cache_loaded
 
 
 if __name__ == '__main__':
@@ -155,8 +257,14 @@ if __name__ == '__main__':
     for file_ext in file_types:
         panoramic_images.extend(glob.glob(str(panoramic_images_path / ("*." + file_ext))))
 
-    f = FeatureMatching(panoramic_images, input_images)
-    f.find_features()
+    fm = FeatureMatching(panoramic_images, input_images)
+
+    success = fm.load_from_cache()
+    if not success:
+        fm.find_features()
+        fm.save_to_cache()
+
+
 
     # pan_img = cv2.imread("/home/patrick/sciebo/BIMKIT_DIENSTKETTE_INFRA1/Kamera-relokalsierung/Daten/RTC360_Abpl m fl Bw und Kiesnest Betonwand_Panorama/Abplatzung,Bewehrung,GKS_0,5m_LR.jpg")
     # in_img = cv2.imread("/home/patrick/sciebo/BIMKIT_DIENSTKETTE_INFRA1/Kamera-relokalsierung/Daten/RTC360_Abpl m fl Bw und Kiesnest Betonwand_Panorama/smartphone-bilder/out.jpg")
