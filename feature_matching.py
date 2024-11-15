@@ -1,97 +1,21 @@
 # import matplotlib.pyplot as plt
 import argparse
-import json
-import pickle
 
 import coloredlogs
 import glob
 import logging
-import os
 import pathlib
 import sys
-import uuid
 
 import cv2
 import numpy as np
 
-from helpers import NumpyArrayEncoder
+from feature_matchers.sift import SIFTMatcher
+from image_tools import read_images
 
 # Create a logger object.
 log = logging.getLogger("FeatureMatching")
 coloredlogs.install(logger=log, level=logging.DEBUG)
-
-
-def read_images(in_imgs: list, max_image_size: int = 0) -> dict:
-    """
-    Reads a list of images and returns a dictionary with unique identifiers as keys and image data as values.
-
-    This function processes a list of image inputs, which can either be image objects or file paths. For image objects,
-    it assigns a new UUID as the key. For file paths, it uses the file name (without extension) as the key. If an image
-    with the same file name already exists in the dictionary, it skips that image to avoid duplicates. The function
-    logs debug and warning messages during the process.
-
-    Args:
-        in_imgs (list): A list of image objects or file paths.
-        max_image_size (int): If positive, resizes the images while keeping the aspect ratio
-
-    Returns:
-        (list, dict): A list with unique identifiers (UUIDs or file names) and a dictionary with the keys as indices and image data as values.
-    """
-    imgs = {}
-    keys = []
-    for in_img in in_imgs:
-        try:
-            if isinstance(in_img, cv2.Mat):
-                new_id = uuid.uuid4()
-                log.debug("Assigning new id %s to image", new_id)
-                imgs[new_id] = resize_image(in_img, max_image_size)
-                keys.append(new_id)
-            else:
-                file_id = in_img.split(os.sep)[-1].split(".")[0]
-                log.debug("Reading image %s as id %s", in_img, file_id)
-                if file_id in imgs:
-                    log.warning("Image with the name %s already present in data base. Skipping...", file_id)
-                    continue
-                im = cv2.imread(str(in_img))
-                if max_image_size > 0:
-                    imgs[file_id] = resize_image(im, max_image_size)
-                else:
-                    imgs[file_id] = im
-                keys.append(file_id)
-        except Exception as e:
-            log.warning("Could not read image %s: %s", in_img, str(e))
-
-    return keys, imgs
-
-
-def resize_image(image, max_size):
-    """
-    Resizes an OpenCV image to a maximum size while keeping the aspect ratio.
-
-    Args:
-        image (cv2.Mat): The input image to be resized.
-        max_size (int): The maximum size (width or height) of the resized image.
-
-    Returns:
-        cv2.Mat: The resized image with the aspect ratio preserved.
-    """
-    # Get the dimensions of the image
-    height, width = image.shape[:2]
-
-    # Calculate the scaling factor
-    if height > width:
-        scaling_factor = max_size / float(height)
-    else:
-        scaling_factor = max_size / float(width)
-
-    # Calculate the new dimensions
-    new_width = int(width * scaling_factor)
-    new_height = int(height * scaling_factor)
-
-    # Resize the image
-    resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_AREA)
-
-    return resized_image
 
 
 def save_keypoint_cache(name, keypoints, descriptors, cache_dir):
@@ -152,41 +76,17 @@ def load_keypoint_cache(name, cache_dir):
     return keypoints, descriptors
 
 
-def match_points(pts1, des1, pts2, des2):
-    flann = cv2.FlannBasedMatcher(dict(algorithm=1, trees=10), dict(checks=500))
-    matches = flann.knnMatch(des1, des2, k=2)
 
-    # bf = cv2.BFMatcher()
-    # matches = bf.knnMatch(des1,des2,k=2)
-
-    # Need to draw only good matches, so create a mask
-    matches_mask = [[0, 0] for i in range(len(matches))]
-    # ratio test as per Lowe's paper
-    good = []
-    for i, (m, n) in enumerate(matches):
-        if m.distance < 0.7 * n.distance:
-            good.append(m)
-            matches_mask[i] = [1, 0]
-
-    MIN_MATCH_COUNT = 30
-    if len(good) < MIN_MATCH_COUNT:
-        log.debug("Not enough matches are found - {}/{}".format(len(good), MIN_MATCH_COUNT))
-        return matches, None, None
-
-    log.debug(f"Found {len(good)} matches, attempting homography")
-    src_pts = np.float32([pts1[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
-    dst_pts = np.float32([pts2[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
-    M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
-    # matches_mask = mask.ravel().tolist()
-
-    return matches, matches_mask, M
-
-
-class FeatureMatching():
-    def __init__(self, pano_imgs, in_imgs, max_image_size=2048):
+class FeatureMatching:
+    def __init__(self, pano_imgs, in_imgs, max_image_size=2048, matcher=None):
         self.pano_features = {}
         self.in_img_features = {}
         self.match_matrix = None
+
+        if matcher:
+            self.matcher = matcher
+        else:
+            self.matcher = SIFTMatcher()
 
         log.info("Reading panoramic images")
         self.pano_img_names, self.pano_imgs = read_images(pano_imgs, max_image_size)
@@ -197,10 +97,10 @@ class FeatureMatching():
         log.info("Finished reading images")
 
     def find_features(self, skip_existing=False):
-        log.info("Finding features in panoramic images")
+        log.info("Finding feature_matchers in panoramic images")
         _pano_features = self._find_features(self.pano_imgs, self.pano_features.keys() if skip_existing else [])
 
-        log.info("Finding features in input images")
+        log.info("Finding feature_matchers in input images")
         _in_img_features = self._find_features(self.in_imgs, self.in_img_features.keys() if skip_existing else [])
 
         self.pano_features.update(_pano_features)
@@ -210,17 +110,14 @@ class FeatureMatching():
         if skip is None:
             skip = []
 
-        sift = getattr(self, "sift", cv2.SIFT.create())
-        self.sift = sift
-
         feat_dict = {}
         for key in sorted(img_db.keys()):
             if key in skip:
                 continue
             in_img = img_db[key]
-            features = sift.detectAndCompute(in_img, None)
+            features = self.matcher.find_features(in_img)
             feat_dict[key] = features
-            log.debug("Found %6d features in image %s", len(features[0]), key)
+            log.debug("Found %6d feature_matchers in image %s", len(features[0]), key)
         return feat_dict
 
     def find_matches(self):
@@ -234,7 +131,7 @@ class FeatureMatching():
             for i_i, img in enumerate(self.in_img_names):
                 pano_pts, pano_des = self.pano_features[pano]
                 img_pts, img_des = self.in_img_features[img]
-                self.match_matrix[i_p, i_i] = match_points(pano_pts, pano_des, img_pts, img_des)
+                self.match_matrix[i_p, i_i] = self.matcher.match_points(pano_pts, pano_des, img_pts, img_des)
 
 
     def save_to_cache(self, cache_dir="./tmp"):
@@ -244,18 +141,18 @@ class FeatureMatching():
                 pano_path.parent.mkdir(exist_ok=True)
                 for key, vals in self.pano_features.items():
                     save_keypoint_cache(key, vals[0], vals[1], cache_dir)
-                log.info("%d panoramic image features written to cache", len(self.pano_features))
+                log.info("%d panoramic image feature_matchers written to cache", len(self.pano_features))
             else:
-                log.info("No features in panoramic images to write to cache")
+                log.info("No feature_matchers in panoramic images to write to cache")
 
             if len(self.in_img_features) > 0:
                 img_path = pathlib.Path(cache_dir).absolute()
                 img_path.mkdir(exist_ok=True)
                 for key, vals in self.in_img_features.items():
                     save_keypoint_cache(key, vals[0], vals[1], cache_dir)
-                log.info("%d input image features written to cache", len(self.in_img_features))
+                log.info("%d input image feature_matchers written to cache", len(self.in_img_features))
             else:
-                log.info("No features in input images to write to cache")
+                log.info("No feature_matchers in input images to write to cache")
         except Exception as e:
             log.error("Could not write cache: %s", str(e), exc_info=e, stack_info=True)
 
@@ -269,12 +166,12 @@ class FeatureMatching():
                     keypoints, descriptors = load_keypoint_cache(key, cache_dir)
                     if keypoints is not None:
                         self.pano_features[key] = (keypoints, descriptors)
-                log.info("%d panoramic image features loaded from cache", len(self.pano_features))
+                log.info("%d panoramic image feature_matchers loaded from cache", len(self.pano_features))
                 for key in self.in_imgs.keys():
                     keypoints, descriptors = load_keypoint_cache(key, cache_dir)
                     if keypoints is not None:
                         self.in_img_features[key] = (keypoints, descriptors)
-                log.info("%d input image features loaded from cache", len(self.in_img_features))
+                log.info("%d input image feature_matchers loaded from cache", len(self.in_img_features))
             else:
                 log.info("No cache directory found")
         except Exception as e:
@@ -291,7 +188,8 @@ if __name__ == '__main__':
     parser.add_argument("panoramic_image_folder", metavar="panIMG", type=pathlib.Path)
     parser.add_argument("input_image_folder", metavar="IMG", type=pathlib.Path)
 
-    parser.add_argument("--show", action='store_true')
+    parser.add_argument("-s", "--show", action='store_true')
+    parser.add_argument("-c", "--cache-features",  action='store_true')
 
     args = parser.parse_args()
     output_path = pathlib.Path(args.outputPath)
@@ -319,9 +217,12 @@ if __name__ == '__main__':
 
     fm = FeatureMatching(panoramic_images, input_images)
 
-    fm.load_from_cache()
+    if args.cache_features:
+        fm.load_from_cache()
     fm.find_features(skip_existing=True)
-    fm.save_to_cache()
+
+    if args.cache_features:
+        fm.save_to_cache()
 
     fm.find_matches()
 
