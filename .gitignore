@@ -163,6 +163,8 @@ cython_debug/
 
 # e57 are 2 much 4 git
 *.e57
+# output files
+/out/
 
 # cache files
 tmp/

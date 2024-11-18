@@ -13,7 +13,7 @@
             "args": [
                 "${workspaceFolder}/data/scan_imgs/",
                 "${workspaceFolder}/data/images/",
-                "--show"
+                "-o ./out"
             ]
         }
     ]

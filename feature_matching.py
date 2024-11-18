@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 
 from feature_matchers.sift import SIFTMatcher
+from feature_matchers.xfeat_matcher import XFeatMatcher
 from image_tools import read_images
 
 # Create a logger object.
@@ -78,10 +79,12 @@ def load_keypoint_cache(name, cache_dir):
 
 
 class FeatureMatching:
-    def __init__(self, pano_imgs, in_imgs, max_image_size=2048, matcher=None):
+    def __init__(self, pano_imgs, in_imgs, max_image_size=2048, matcher=None, output_dir=False):
         self.pano_features = {}
         self.in_img_features = {}
         self.match_matrix = None
+
+        self.output_dir = output_dir
 
         if matcher:
             self.matcher = matcher
@@ -97,10 +100,10 @@ class FeatureMatching:
         log.info("Finished reading images")
 
     def find_features(self, skip_existing=False):
-        log.info("Finding feature_matchers in panoramic images")
+        log.info("Finding features in panoramic images")
         _pano_features = self._find_features(self.pano_imgs, self.pano_features.keys() if skip_existing else [])
 
-        log.info("Finding feature_matchers in input images")
+        log.info("Finding features in input images")
         _in_img_features = self._find_features(self.in_imgs, self.in_img_features.keys() if skip_existing else [])
 
         self.pano_features.update(_pano_features)
@@ -117,7 +120,7 @@ class FeatureMatching:
             in_img = img_db[key]
             features = self.matcher.find_features(in_img)
             feat_dict[key] = features
-            log.debug("Found %6d feature_matchers in image %s", len(features[0]), key)
+            log.debug("Found %6d features in image %s", len(features[0]), key)
         return feat_dict
 
     def find_matches(self):
@@ -131,7 +134,21 @@ class FeatureMatching:
             for i_i, img in enumerate(self.in_img_names):
                 pano_pts, pano_des = self.pano_features[pano]
                 img_pts, img_des = self.in_img_features[img]
-                self.match_matrix[i_p, i_i] = self.matcher.match_points(pano_pts, pano_des, img_pts, img_des)
+                matches, matches_mask, matrix = self.matcher.match_points(pano_pts, pano_des, img_pts, img_des)
+                self.match_matrix[i_p, i_i] = (matches, matches_mask, matrix)
+
+                if matches is not None:
+                    log.info("Found match with %d keypoint matches", len(matches))
+                    if self.output_dir:
+                        pano_kpts, img_kpts = zip(*matches)
+                        pano_img = self.pano_imgs[pano]
+                        in_img = self.in_imgs[img]
+                        matched_frame = cv2.drawMatches(pano_img, pano_kpts, in_img, img_kpts, matches_mask, None, matchColor=(0, 200, 0), flags=2)
+                        cv2.imwrite(f"{self.output_dir}/m_{i_p}_{i_i}_matches.jpg", matched_frame)
+                        
+                        x_to_y = cv2.warpPerspective(in_img, np.linalg.inv(matrix), (pano_img.shape[1], pano_img.shape[0]))
+                        overlay = cv2.addWeighted(pano_img, 0.5, x_to_y, 0.5, 0)
+                        cv2.imwrite(f"{self.output_dir}/m_{i_p}_{i_i}_overlay.jpg", overlay)
 
 
     def save_to_cache(self, cache_dir="./tmp"):
@@ -141,18 +158,18 @@ class FeatureMatching:
                 pano_path.parent.mkdir(exist_ok=True)
                 for key, vals in self.pano_features.items():
                     save_keypoint_cache(key, vals[0], vals[1], cache_dir)
-                log.info("%d panoramic image feature_matchers written to cache", len(self.pano_features))
+                log.info("%d panoramic image features written to cache", len(self.pano_features))
             else:
-                log.info("No feature_matchers in panoramic images to write to cache")
+                log.info("No features in panoramic images to write to cache")
 
             if len(self.in_img_features) > 0:
                 img_path = pathlib.Path(cache_dir).absolute()
                 img_path.mkdir(exist_ok=True)
                 for key, vals in self.in_img_features.items():
                     save_keypoint_cache(key, vals[0], vals[1], cache_dir)
-                log.info("%d input image feature_matchers written to cache", len(self.in_img_features))
+                log.info("%d input image features written to cache", len(self.in_img_features))
             else:
-                log.info("No feature_matchers in input images to write to cache")
+                log.info("No features in input images to write to cache")
         except Exception as e:
             log.error("Could not write cache: %s", str(e), exc_info=e, stack_info=True)
 
@@ -166,12 +183,12 @@ class FeatureMatching:
                     keypoints, descriptors = load_keypoint_cache(key, cache_dir)
                     if keypoints is not None:
                         self.pano_features[key] = (keypoints, descriptors)
-                log.info("%d panoramic image feature_matchers loaded from cache", len(self.pano_features))
+                log.info("%d panoramic image features loaded from cache", len(self.pano_features))
                 for key in self.in_imgs.keys():
                     keypoints, descriptors = load_keypoint_cache(key, cache_dir)
                     if keypoints is not None:
                         self.in_img_features[key] = (keypoints, descriptors)
-                log.info("%d input image feature_matchers loaded from cache", len(self.in_img_features))
+                log.info("%d input image features loaded from cache", len(self.in_img_features))
             else:
                 log.info("No cache directory found")
         except Exception as e:
@@ -181,18 +198,15 @@ class FeatureMatching:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Runs Services")
-    parser.add_argument("-o", "--outputPath", type=pathlib.Path, default=".",
-                        help="Path to output directory")
+    parser = argparse.ArgumentParser(description="LiLoc Image Feature Matcher Tool")
 
     parser.add_argument("panoramic_image_folder", metavar="panIMG", type=pathlib.Path)
     parser.add_argument("input_image_folder", metavar="IMG", type=pathlib.Path)
 
-    parser.add_argument("-s", "--show", action='store_true')
+    parser.add_argument("-o", "--output-dir", type=pathlib.Path, help="Path to output directory")
     parser.add_argument("-c", "--cache-features",  action='store_true')
 
     args = parser.parse_args()
-    output_path = pathlib.Path(args.outputPath)
 
     input_images_path: pathlib.Path = args.input_image_folder
     panoramic_images_path: pathlib.Path = args.panoramic_image_folder
@@ -215,7 +229,7 @@ if __name__ == '__main__':
     for file_ext in file_types:
         panoramic_images.extend(glob.glob(str(panoramic_images_path / ("*." + file_ext))))
 
-    fm = FeatureMatching(panoramic_images, input_images)
+    fm = FeatureMatching(panoramic_images, input_images, matcher=XFeatMatcher(), output_dir=args.output_dir)
 
     if args.cache_features:
         fm.load_from_cache()
