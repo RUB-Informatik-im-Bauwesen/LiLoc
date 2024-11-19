@@ -4,8 +4,8 @@ import numpy as np
 import logging, coloredlogs
 
 # Create a logger object.
-log = logging.getLogger("SIFTMatcher")
-coloredlogs.install(logger=log, level=logging.DEBUG)
+log = logging.getLogger("LiLoc")
+coloredlogs.install(logger=log)
 
 sift_params = dict(algorithm=1, trees=10), dict(checks=500)
 

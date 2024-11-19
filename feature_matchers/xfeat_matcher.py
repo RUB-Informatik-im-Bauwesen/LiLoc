@@ -48,7 +48,7 @@ class XFeatMatcher:
             good_matches = [cv2.DMatch(i, i, 0) for i in range(len(kp1))]
 
             if len(good_matches) >= self.match_threshold:
-                return zip(kp1, kp2), good_matches, H
+                return list(zip(kp1, kp2)), good_matches, H
             else:
                 return None, None, None
         else:

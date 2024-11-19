@@ -13,7 +13,7 @@ from cv2 import Mat
 from numpy import ndarray
 
 # Create a logger object.
-log = logging.getLogger("SIFTMatcher")
+log = logging.getLogger("LiLoc")
 coloredlogs.install(logger=log, level=logging.DEBUG)
 
 
