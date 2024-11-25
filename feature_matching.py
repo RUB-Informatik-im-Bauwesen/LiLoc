@@ -96,6 +96,9 @@ def _find_features(matcher, img_db: dict, skip=None):
 
 
 def plot_match_matrix(match_matrix, img_set_a_names, img_set_b_names, outfile=None):
+    if not np.any(match_matrix):
+        log.info("No matches to print")
+        return
     import matplotlib.pyplot as plt
     plt.imshow(match_matrix, interpolation='nearest', cmap=plt.colormaps["Blues"])
     plt.title('Match Matrix')
@@ -123,6 +126,7 @@ def write_match_images(output_dir, img_a, img_a_kpts, img_b, img_b_kpts, match_i
                                     matchColor=(0, 200, 0), flags=2)
     cv2.imwrite(f"{output_dir}/{match_id}_matches.jpg", matched_frame)
     a_to_b = cv2.warpPerspective(img_b, np.linalg.inv(matrix), (img_a.shape[1], img_a.shape[0]))
+    cv2.imwrite(f"{output_dir}/{match_id}_tf.jpg", a_to_b)
     overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
     cv2.imwrite(f"{output_dir}/{match_id}_overlay.jpg", overlay)
 
@@ -144,7 +148,7 @@ class ExhaustiveMatching:
         self.img_set_names, self.img_set = read_images(img_set, max_image_size)
 
     def find_features(self, skip_existing=False):
-        log.info("Finding features in Image Set A")
+        log.info("Finding features in Image Set")
         _img_set_features = _find_features(self.matcher, self.img_set, self.img_set_features.keys() if skip_existing else [])
 
         self.img_set_features.update(_img_set_features)
@@ -187,6 +191,7 @@ class ExhaustiveMatching:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
                 json.dump(self.matches, f, indent=2, cls=NumpyArrayEncoder)
             plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.png")
+            log.info("Results written to %s", str(self.output_dir))
 
     def save_to_cache(self, cache_dir="./tmp"):
         pass
@@ -265,6 +270,7 @@ class CrossMatching:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
                 json.dump(self.matches, f, indent=2, cls=NumpyArrayEncoder)
             plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.png")
+            log.info("Results written to %s", str(self.output_dir))
 
 
     def save_to_cache(self, cache_dir="./tmp"):
@@ -329,6 +335,10 @@ def start_exhaustive_match(args):
 
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)
+
+    if len(input_images) == 0:
+        log.error("No input images found in %s", str(input_images_path))
+        return
 
     em = ExhaustiveMatching(input_images, matcher=XFeatMatcher(), output_dir=args.output_dir)
 

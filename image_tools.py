@@ -74,6 +74,9 @@ def resize_image(image, max_size):
     # Get the dimensions of the image
     height, width = image.shape[:2]
 
+    if height <= max_size and width <= max_size:
+        return image
+
     # Calculate the scaling factor
     if height > width:
         scaling_factor = max_size / float(height)

@@ -5,15 +5,30 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug reloc",
+            "name": "Debug match",
             "type": "debugpy",
             "request": "launch",
             "program": "feature_matching.py",
             "console": "integratedTerminal",
             "args": [
+                "--debug",
+                "match",
+                "${workspaceFolder}/data/match_test/512/",
+                "-o=./out/512/",
+            ]
+        },
+        {
+            "name": "Debug cross match",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "feature_matching.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--debug",
+                "cross-match",
                 "${workspaceFolder}/data/scan_imgs/",
                 "${workspaceFolder}/data/images/",
-                "-o ./out"
+                "-o=./out/cross",
             ]
         }
     ]
