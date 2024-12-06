@@ -13,7 +13,7 @@ import logging
 log = logging.getLogger("LiLoc")
 
 class XFeatMatcher:
-    def __init__(self, match_threshold=20, min_keypoints=10):
+    def __init__(self, match_threshold=30, min_keypoints=30):
         self.feature_detector = XFeat()
         self.match_threshold = match_threshold
         self.min_keypoints = min_keypoints

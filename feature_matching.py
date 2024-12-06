@@ -95,21 +95,23 @@ def _find_features(matcher, img_db: dict, skip=None):
     return feat_dict
 
 
-def plot_match_matrix(match_matrix, img_set_a_names, img_set_b_names, outfile=None):
+def plot_match_matrix(match_matrix, img_set_a_names, img_set_b_names, outfile=None, cap=100):
     if not np.any(match_matrix):
         log.info("No matches to print")
         return
     import matplotlib.pyplot as plt
-    plt.imshow(match_matrix, interpolation='nearest', cmap=plt.colormaps["Blues"])
+    plt.imshow(np.clip(match_matrix, 0, cap), interpolation='nearest', cmap=plt.colormaps["Blues"])
     plt.title('Match Matrix')
     plt.colorbar()
 
-    if img_set_a_names:
+    plt.ylabel("img_id")
+    if img_set_a_names and len(img_set_a_names) < 20:
         len_a = len(img_set_a_names)
         tick_marks_y = np.arange(len_a)
         plt.yticks(tick_marks_y, img_set_a_names, fontsize=5)
 
-    if img_set_b_names:
+    plt.xlabel("img_id")
+    if img_set_b_names and len(img_set_a_names) < 20:
         len_b = len(img_set_b_names)
         tick_marks_x = np.arange(len_b)
         plt.xticks(tick_marks_x, img_set_b_names, rotation=90, fontsize=5)
@@ -160,8 +162,11 @@ class ExhaustiveMatching:
 
         log.info("Starting matching...")
         for i_p, img_a_id in enumerate(self.img_set_names):
-            log.info("%4d/%d matches complete", i_p * len_imgs, len_imgs * len_imgs)
+            log.info("%d%% matches complete", i_p / len_imgs * 100.)
             for i_i, img_b_id in enumerate(self.img_set_names):
+                if i_i < i_p:
+                    self.match_matrix[i_p, i_i] = self.match_matrix[i_i, i_p]
+                    continue
                 if i_i == i_p:
                     self.match_matrix[i_p, i_i] = 1
                     continue
@@ -190,6 +195,7 @@ class ExhaustiveMatching:
         if self.output_dir:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
                 json.dump(self.matches, f, indent=2, cls=NumpyArrayEncoder)
+            plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.svg")
             plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.png")
             log.info("Results written to %s", str(self.output_dir))
 
@@ -240,9 +246,9 @@ class CrossMatching:
         self.matches = []
 
         log.info("Starting matching...")
-        for i_p, img_a_id in enumerate(self.img_set_a_names):
-            log.info("%4d/%d matches complete", i_p * len_b, len_a * len_b)
-            for i_i, img_b_id in enumerate(self.img_set_b_names):
+        for i_i, img_b_id in enumerate(self.img_set_b_names):
+            log.info("%d%% matches complete", i_i / len_b * 100.)
+            for i_p, img_a_id in enumerate(self.img_set_a_names):
                 img_set_a_pts, img_set_a_des = self.img_set_a_features[img_a_id]
                 img_pts, img_des = self.img_set_b_features[img_b_id]
                 matches, matches_mask, matrix = self.matcher.match_points(img_set_a_pts, img_set_a_des, img_pts, img_des)
@@ -269,6 +275,7 @@ class CrossMatching:
         if self.output_dir:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
                 json.dump(self.matches, f, indent=2, cls=NumpyArrayEncoder)
+            plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.svg")
             plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.png")
             log.info("Results written to %s", str(self.output_dir))
 
