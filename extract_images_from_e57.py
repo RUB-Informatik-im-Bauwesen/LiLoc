@@ -7,6 +7,8 @@ import numpy as np
 import cv2 as cv
 import pye57.e57
 
+import pathlib
+
 from helpers import NumpyArrayEncoder
 
 
@@ -130,7 +132,7 @@ def write_camera_poses(poses, fname):
                 f.write(f"{pose['tx']} {pose['ty']} {pose['tz']} {yaw} {pitch} {roll}\n")
 
 
-def extract_e57_pose(file, *args, write_imgs=False):
+def extract_e57_pose(file, *args, write_imgs=False, render_img_from_rgb=False):
     pose_dict = {}
     image_dict = {}
 
@@ -140,16 +142,22 @@ def extract_e57_pose(file, *args, write_imgs=False):
 
     for path in filelist:
         if path is not pye57.E57:
-            name = path.split(os.path.sep)[-1]
-            name = name.split(".")[0]
-            pc_e57 = pye57.E57(path)
+            p = pathlib.Path(path)
+            name = p.stem
+            print("Reading " + name)
+            pc_e57 = pye57.E57(str(path))
         else:
+            print("Reading Point Cloud...")
             pc_e57: pye57.E57 = path
             name = path.split(pc_e57.path)[-1]
             name = name.split(".")[0]
 
         pose_tr, pose_rot = extract_pose(pc_e57)
-        images, image_parameters = extract_images(pc_e57)
+
+        if render_img_from_rgb:
+            images, image_parameters = render_from_rgb(pc_e57)
+        else:
+            images, image_parameters = extract_images(pc_e57)
 
         if len(images) == 6:
             image_parameters[0]["facing"] = "00_front"
@@ -177,26 +185,117 @@ def extract_e57_pose(file, *args, write_imgs=False):
             image_dict[fname] = image
             image_p["file"] = fname
 
+
     with open("scanner_poses.json", "w") as f:
         json.dump(pose_dict, f, cls=NumpyArrayEncoder, indent=2)
 
     return pose_dict, image_dict
 
 
-if __name__ == "__main__":
-    files = [
-        r"E:\Seafile\RTC360\01-Parkplatz.e57                                ",
-        r"E:\Seafile\RTC360\02-Unterbau-Korrosion.e57                       ",
-        r"E:\Seafile\RTC360\03-Unterbau-Korrosion-retry.e57                 ",
-        r"E:\Seafile\RTC360\04-Unterbau-Durchfeuchtung.e57                  ",
-        r"E:\Seafile\RTC360\05-Unterbau-Durchfeuchtung.e57                  ",
-        r"E:\Seafile\RTC360\06-Unterbau-Risse.e57                           ",
-        r"E:\Seafile\RTC360\07-Unterbau-Durchfeuchtung.e57                  ",
-        r"E:\Seafile\RTC360\08-Unterbau-Durchfeuchtung-Risse-Grafitti.e57   ",
-        r"E:\Seafile\RTC360\09-Trasse.e57                                   ",
-    ]
+def render_from_rgb(pc: pye57.E57):
+    head = pc.get_header(0)
+    print(pc.scan_position(0))
+    points = pc.read_scan(0, colors=True, transform=False)
+    print(points.keys())
+    print(head.rotation_matrix)
+    pts = np.vstack([points["cartesianX"], points["cartesianY"], points["cartesianZ"]])
+    col = np.vstack([points["colorRed"], points["colorGreen"], points["colorBlue"]])
+    print(pts[...,0])
+    print(col[...,0])
+    print(pts.shape)
 
-    poses, images = extract_e57_pose(*files)
+    imsize = 512
+
+    c_e_up = np.array([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+    ])
+
+    c_e_down = np.array([
+        [-1, 0, 0],
+        [0, -1, 0],
+        [0, 0, -1]
+    ])
+
+    c_e_front = np.array([
+        [1, 0, 0],
+        [0, 0, -1],
+        [0, 1, 0]
+    ])
+
+    c_e_back = np.array([
+        [1, 0, 0],
+        [0, 0, 1],
+        [0, -1, 0]
+    ])
+
+    c_e_right = np.array([
+        [0, 0, 1],
+        [0, 1, 0],
+        [-1, 0, 0]
+    ])
+
+    c_e_left = np.array([
+        [0, 0, -1],
+        [0, 1, 0],
+        [1, 0, 0]
+    ])
+
+    c_i = np.array([
+        [imsize/2, 0, 0],
+        [0, imsize/2, 0],
+        [0, 0, 1]
+    ])
+
+    img_up = render_from_pov(pts, c_e_up, c_i, col, imsize)
+    img_front = render_from_pov(pts, c_e_front, c_i, col, imsize)
+    img_back = render_from_pov(pts, c_e_back, c_i, col, imsize)
+    img_right = render_from_pov(pts, c_e_right, c_i, col, imsize)
+    img_left = render_from_pov(pts, c_e_left, c_i, col, imsize)
+    img_down = render_from_pov(pts, c_e_down, c_i, col, imsize)
+
+    image_params = [{},{},{},{},{},{}]
+
+    images = [img_front, img_right, img_back, img_left, img_up, img_down]
+    return images, image_params
+
+
+def render_from_pov(pts, c_e, c_i, col, imsize):
+    pc_cam = (c_i @ c_e @ pts)
+    pc_cam = np.round(pc_cam, 0).astype(np.int32)
+    pc_and_col = np.vstack([pc_cam, col])
+    img = np.zeros((imsize, imsize, 4))
+    for p in np.nditer(pc_and_col, flags=["external_loop"], order="F"):
+        if p[0] < 0 or p[0] >= imsize or p[1] < 0 or p[1] >= imsize or p[2] < 0:
+            continue
+        img[p[1], p[0], 0] = p[3]
+        img[p[1], p[0], 1] = p[4]
+        img[p[1], p[0], 2] = p[5]
+        img[p[1], p[0], 3] = 255
+    return img.astype(np.uint8)
+
+
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="LiLoc Point Cloud Image Extractor Tool")
+    parser.add_argument("point_cloud", metavar="pc", type=pathlib.Path)
+    parser.add_argument("-o", "--output-dir", type=pathlib.Path, help="Path to output directory", default=None)
+    parser.add_argument("-r", "--rgb", action='store_true')
+
+    args = parser.parse_args()
+
+    path: pathlib.Path = args.point_cloud
+    if path.is_file():
+        files = [path]
+    else:
+        files = list(path.glob("*.e57"))
+
+    outpath: pathlib.Path = args.output_dir
+    if outpath is None:
+        outpath = path if path.is_dir() else path.parent
+
+    poses, images = extract_e57_pose(*files, render_img_from_rgb=args.rgb)
     for imgname, img in images.items():
-        cv2.imwrite("data/a44/" + imgname, img)
-    write_camera_poses(poses, "data/a44/camera_poses.txt")
+        cv2.imwrite(str(outpath.joinpath(imgname)), img)
+    write_camera_poses(poses, str(outpath.joinpath("camera_poses.txt")))
