@@ -6,6 +6,8 @@ import json
 import numpy as np
 import cv2 as cv
 import pye57.e57
+import tqdm
+
 
 import pathlib
 
@@ -197,6 +199,7 @@ def render_from_rgb(pc: pye57.E57):
     print(pc.scan_position(0))
     points = pc.read_scan(0, colors=True, transform=False)
     print(points.keys())
+    print(head.translation)
     print(head.rotation_matrix)
     pts = np.vstack([points["cartesianX"], points["cartesianY"], points["cartesianZ"]])
     col = np.vstack([points["colorRed"], points["colorGreen"], points["colorBlue"]])
@@ -207,72 +210,89 @@ def render_from_rgb(pc: pye57.E57):
     imsize = 512
 
     c_e_up = np.array([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1]
-    ])
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ], dtype=np.float64)
 
     c_e_down = np.array([
-        [-1, 0, 0],
-        [0, -1, 0],
-        [0, 0, -1]
-    ])
+        [-1, 0, 0, 0],
+        [0, -1, 0, 0],
+        [0, 0, -1, 0],
+        [0, 0,  0, 1]
+    ], dtype=np.float64)
 
     c_e_front = np.array([
-        [1, 0, 0],
-        [0, 0, -1],
-        [0, 1, 0]
-    ])
+        [1, 0,  0, 0],
+        [0, 0, -1, 0],
+        [0, 1,  0, 0],
+        [0, 0,  0, 1]
+    ], dtype=np.float64)
 
     c_e_back = np.array([
-        [1, 0, 0],
-        [0, 0, 1],
-        [0, -1, 0]
-    ])
+        [1,  0, 0, 0],
+        [0,  0, 1, 0],
+        [0, -1, 0, 0],
+        [0,  0, 0, 1]
+    ], dtype=np.float64)
 
     c_e_right = np.array([
-        [0, 0, 1],
-        [0, 1, 0],
-        [-1, 0, 0]
-    ])
+        [ 0, 0, 1, 0],
+        [ 0, 1, 0, 0],
+        [-1, 0, 0, 0],
+        [ 0, 0, 0, 1]
+    ], dtype=np.float64)
 
     c_e_left = np.array([
-        [0, 0, -1],
-        [0, 1, 0],
-        [1, 0, 0]
-    ])
+        [0, 0, -1, 0],
+        [0, 1,  0, 0],
+        [1, 0,  0, 0],
+        [0, 0,  0, 1]
+    ], dtype=np.float64)
 
     c_i = np.array([
-        [imsize/2, 0, 0],
-        [0, imsize/2, 0],
-        [0, 0, 1]
-    ])
-
-    img_up = render_from_pov(pts, c_e_up, c_i, col, imsize)
-    img_front = render_from_pov(pts, c_e_front, c_i, col, imsize)
-    img_back = render_from_pov(pts, c_e_back, c_i, col, imsize)
-    img_right = render_from_pov(pts, c_e_right, c_i, col, imsize)
-    img_left = render_from_pov(pts, c_e_left, c_i, col, imsize)
-    img_down = render_from_pov(pts, c_e_down, c_i, col, imsize)
+        [1/2, 0, 0, 0],
+        [0, 1/2, 0, 0],
+        [0,   0,   1, 0]
+    ], dtype=np.float64)
+    images = [
+        render_from_pov(pts, c_e_front, c_i, col, imsize),
+        render_from_pov(pts, c_e_right, c_i, col, imsize),
+        render_from_pov(pts, c_e_back, c_i, col, imsize),
+        render_from_pov(pts, c_e_left, c_i, col, imsize),
+        render_from_pov(pts, c_e_up, c_i, col, imsize),
+        render_from_pov(pts, c_e_down, c_i, col, imsize),
+    ]
 
     image_params = [{},{},{},{},{},{}]
 
-    images = [img_front, img_right, img_back, img_left, img_up, img_down]
     return images, image_params
 
 
 def render_from_pov(pts, c_e, c_i, col, imsize):
-    pc_cam = (c_i @ c_e @ pts)
-    pc_cam = np.round(pc_cam, 0).astype(np.int32)
+    pts = np.vstack((pts, np.ones((pts.shape[1]))))
+    pc_cam = (c_i @ (c_e @ pts))
+    #pc_cam = pc_cam[:2,...] / pc_cam[2,...]
+    #pc_cam = np.round(pc_cam, 0).astype(np.int32)
     pc_and_col = np.vstack([pc_cam, col])
     img = np.zeros((imsize, imsize, 4))
-    for p in np.nditer(pc_and_col, flags=["external_loop"], order="F"):
-        if p[0] < 0 or p[0] >= imsize or p[1] < 0 or p[1] >= imsize or p[2] < 0:
+    zBuf = np.full((imsize, imsize), np.inf, dtype=np.float64)
+    for p in tqdm.tqdm(np.nditer(pc_and_col, flags=["external_loop"], order="F"), total=pts.shape[1]):
+        if p[1] < -1 or p[1] > 1 or p[0] < -1 or p[0] > 1 or p[2] < 0:
             continue
-        img[p[1], p[0], 0] = p[3]
-        img[p[1], p[0], 1] = p[4]
-        img[p[1], p[0], 2] = p[5]
-        img[p[1], p[0], 3] = 255
+
+        px = int(np.round(p[1] * imsize + imsize / 2, 0))
+        py = int(np.round(p[0] * imsize + imsize / 2, 0))
+
+        if px < 0 or px >= imsize or py < 0 or py >= imsize or p[2] < 0 or p[2] > zBuf[px, py]:
+            continue
+
+        img [px, py, 0] = p[5]
+        img [px, py, 1] = p[4]
+        img [px, py, 2] = p[3]
+        img [px, py, 3] = 255
+        zBuf[px, py]    = p[2]
     return img.astype(np.uint8)
 
 
@@ -294,6 +314,9 @@ if __name__ == "__main__":
     outpath: pathlib.Path = args.output_dir
     if outpath is None:
         outpath = path if path.is_dir() else path.parent
+
+    if len(files) == 0:
+        print("No files found in " + path)
 
     poses, images = extract_e57_pose(*files, render_img_from_rgb=args.rgb)
     for imgname, img in images.items():
