@@ -1,4 +1,5 @@
 import os
+from gettext import translation
 
 import cv2
 import pye57
@@ -243,7 +244,7 @@ def extract_e57_pose(file, *args, write_imgs=False, render_img_from_rgb=False):
 
 def render_from_rgb(pc: pye57.E57):
     head = pc.get_header(0)
-    print(pc.scan_position(0))
+    t = pc.scan_position(0)[0]
     points = pc.read_scan(0, colors=True, transform=False)
     print(points.keys())
     print(head.translation)
@@ -312,7 +313,21 @@ def render_from_rgb(pc: pye57.E57):
         render_from_pov(pts, c_e_down, c_i, col, imsize),
     ]
 
-    image_params = [{},{},{},{},{},{}]
+    q_front = rotation_matrix_to_quaternion(c_e_front)
+    q_left  = rotation_matrix_to_quaternion(c_e_left )
+    q_back  = rotation_matrix_to_quaternion(c_e_back )
+    q_right = rotation_matrix_to_quaternion(c_e_right)
+    q_up    = rotation_matrix_to_quaternion(c_e_up   )
+    q_down  = rotation_matrix_to_quaternion(c_e_down )
+
+    image_params = [
+        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_front[0], "rx": q_front[1], "ry": q_front[2], "rz": q_front[3]}},
+        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_right[0], "rx": q_right[1], "ry": q_right[2], "rz": q_right[3]}},
+        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_back [0], "rx": q_back [1], "ry": q_back [2], "rz": q_back [3]}},
+        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_left [0], "rx": q_left [1], "ry": q_left [2], "rz": q_left [3]}},
+        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_up   [0], "rx": q_up   [1], "ry": q_up   [2], "rz": q_up   [3]}},
+        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_down [0], "rx": q_down [1], "ry": q_down [2], "rz": q_down [3]}}
+    ]
 
     return images, image_params
 
@@ -341,7 +356,7 @@ def render_from_pov(pts, c_e, c_i, col, imsize):
         img [px, py, 3] = 255
         zBuf[px, py]    = p[2]
 
-    # Dilate alpha
+    # Dilate alpha using Blackhat to only get a mask of closed pixels
     alpha = np.array(cv2.morphologyEx(img[...,3], cv2.MORPH_BLACKHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))), dtype=np.uint8)
     # Inpaint where possible
     img = cv2.inpaint(img[...,:3], alpha, 5, cv.INPAINT_TELEA)
