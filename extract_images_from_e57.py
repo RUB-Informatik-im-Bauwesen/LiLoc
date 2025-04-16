@@ -46,6 +46,53 @@ def quaternion_to_euler(x, y, z, w):
     return yaw, pitch, roll
 
 
+def rotation_matrix_to_quaternion(matrix):
+    """
+    Author: ChatGPT
+
+    Convert a 4x4 rotation matrix to a quaternion.
+
+    Parameters:
+    matrix (numpy.ndarray): A 4x4 rotation matrix.
+
+    Returns:
+    numpy.ndarray: A quaternion [w, x, y, z].
+    """
+    if matrix.shape != (4, 4):
+        raise ValueError("Input matrix must be a 4x4 matrix")
+
+    m = matrix[:3, :3]  # Extract the 3x3 rotation part of the matrix
+
+    trace = np.trace(m)
+
+    if trace > 0:
+        s = 0.5 / np.sqrt(trace + 1.0)
+        w = 0.25 / s
+        x = (m[2, 1] - m[1, 2]) * s
+        y = (m[0, 2] - m[2, 0]) * s
+        z = (m[1, 0] - m[0, 1]) * s
+    else:
+        if m[0, 0] > m[1, 1] and m[0, 0] > m[2, 2]:
+            s = 2.0 * np.sqrt(1.0 + m[0, 0] - m[1, 1] - m[2, 2])
+            w = (m[2, 1] - m[1, 2]) / s
+            x = 0.25 * s
+            y = (m[0, 1] + m[1, 0]) / s
+            z = (m[0, 2] + m[2, 0]) / s
+        elif m[1, 1] > m[2, 2]:
+            s = 2.0 * np.sqrt(1.0 + m[1, 1] - m[0, 0] - m[2, 2])
+            w = (m[0, 2] - m[2, 0]) / s
+            x = (m[0, 1] + m[1, 0]) / s
+            y = 0.25 * s
+            z = (m[1, 2] + m[2, 1]) / s
+        else:
+            s = 2.0 * np.sqrt(1.0 + m[2, 2] - m[0, 0] - m[1, 1])
+            w = (m[1, 0] - m[0, 1]) / s
+            x = (m[0, 2] + m[2, 0]) / s
+            y = (m[1, 2] + m[2, 1]) / s
+            z = 0.25 * s
+
+    return np.array([w, x, y, z])
+
 # ==============
 # e57 Extraction
 # ==============
@@ -207,7 +254,7 @@ def render_from_rgb(pc: pye57.E57):
     print(col[...,0])
     print(pts.shape)
 
-    imsize = 512
+    imsize = 2048
 
     c_e_up = np.array([
         [1, 0, 0, 0],
@@ -231,29 +278,29 @@ def render_from_rgb(pc: pye57.E57):
     ], dtype=np.float64)
 
     c_e_back = np.array([
-        [1,  0, 0, 0],
-        [0,  0, 1, 0],
-        [0, -1, 0, 0],
-        [0,  0, 0, 1]
+        [-1,  0, 0, 0],
+        [ 0,  0,-1, 0],
+        [ 0, -1, 0, 0],
+        [ 0,  0, 0, 1]
     ], dtype=np.float64)
 
     c_e_right = np.array([
-        [ 0, 0, 1, 0],
-        [ 0, 1, 0, 0],
-        [-1, 0, 0, 0],
+        [ 0,-1, 0, 0],
+        [ 0, 0,-1, 0],
+        [ 1, 0, 0, 0],
         [ 0, 0, 0, 1]
     ], dtype=np.float64)
 
     c_e_left = np.array([
-        [0, 0, -1, 0],
-        [0, 1,  0, 0],
-        [1, 0,  0, 0],
-        [0, 0,  0, 1]
+        [ 0, 1,  0, 0],
+        [ 0, 0, -1, 0],
+        [-1, 0,  0, 0],
+        [ 0, 0,  0, 1]
     ], dtype=np.float64)
 
     c_i = np.array([
-        [1/2, 0, 0, 0],
-        [0, 1/2, 0, 0],
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
         [0,   0,   1, 0]
     ], dtype=np.float64)
     images = [
@@ -273,17 +320,17 @@ def render_from_rgb(pc: pye57.E57):
 def render_from_pov(pts, c_e, c_i, col, imsize):
     pts = np.vstack((pts, np.ones((pts.shape[1]))))
     pc_cam = (c_i @ (c_e @ pts))
-    #pc_cam = pc_cam[:2,...] / pc_cam[2,...]
+    pc_cam[:2,...] = pc_cam[:2,...] / pc_cam[2,...]
     #pc_cam = np.round(pc_cam, 0).astype(np.int32)
     pc_and_col = np.vstack([pc_cam, col])
-    img = np.zeros((imsize, imsize, 4))
+    img = np.zeros((imsize, imsize, 4), dtype=np.uint8)
     zBuf = np.full((imsize, imsize), np.inf, dtype=np.float64)
     for p in tqdm.tqdm(np.nditer(pc_and_col, flags=["external_loop"], order="F"), total=pts.shape[1]):
         if p[1] < -1 or p[1] > 1 or p[0] < -1 or p[0] > 1 or p[2] < 0:
             continue
 
-        px = int(np.round(p[1] * imsize + imsize / 2, 0))
-        py = int(np.round(p[0] * imsize + imsize / 2, 0))
+        px = int(np.round(p[1] * imsize / 2 + imsize / 2, 0))
+        py = int(np.round(p[0] * imsize / 2 + imsize / 2, 0))
 
         if px < 0 or px >= imsize or py < 0 or py >= imsize or p[2] < 0 or p[2] > zBuf[px, py]:
             continue
@@ -293,6 +340,12 @@ def render_from_pov(pts, c_e, c_i, col, imsize):
         img [px, py, 2] = p[3]
         img [px, py, 3] = 255
         zBuf[px, py]    = p[2]
+
+    # Dilate alpha
+    alpha = np.array(cv2.morphologyEx(img[...,3], cv2.MORPH_BLACKHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))), dtype=np.uint8)
+    # Inpaint where possible
+    img = cv2.inpaint(img[...,:3], alpha, 5, cv.INPAINT_TELEA)
+
     return img.astype(np.uint8)
 
 
