@@ -91,6 +91,8 @@ def _find_features(matcher, img_db: dict, skip=None):
         in_img = img_db[key]
         features = matcher.find_features(in_img)
         feat_dict[key] = features
+        if features is None:
+            raise AssertionError("Could not find features in image " + key)
         log.debug("Found %6d features in image %s", len(features[0]), key)
     return feat_dict
 
@@ -230,10 +232,10 @@ class CrossMatching:
         log.info("Finished reading images")
 
     def find_features(self, skip_existing=False):
-        log.info("Finding features in Image Set A")
+        log.info(f"Finding features in Image Set A ({len(self.img_set_a)} images)")
         _img_set_a_features = _find_features(self.matcher, self.img_set_a, self.img_set_a_features.keys() if skip_existing else [])
 
-        log.info("Finding features in Image Set B")
+        log.info(f"Finding features in Image Set B ({len(self.img_set_b)} images)")
         _img_set_b_features = _find_features(self.matcher, self.img_set_b, self.img_set_b_features.keys() if skip_existing else [])
 
         self.img_set_a_features.update(_img_set_a_features)
@@ -251,7 +253,11 @@ class CrossMatching:
             for i_p, img_a_id in enumerate(self.img_set_a_names):
                 img_set_a_pts, img_set_a_des = self.img_set_a_features[img_a_id]
                 img_pts, img_des = self.img_set_b_features[img_b_id]
-                matches, matches_mask, matrix = self.matcher.match_points(img_set_a_pts, img_set_a_des, img_pts, img_des)
+                try:
+                    matches, matches_mask, matrix = self.matcher.match_points(img_set_a_pts, img_set_a_des, img_pts, img_des)
+                except Exception as e:
+                    log.exception(f"Could not match {img_a_id} and {img_b_id}.", exc_info=e)
+                    log.debug(f"Could not match {img_a_id} and {img_b_id}.", exc_info=e, stack_info=True)
 
                 self.match_matrix[i_p, i_i] = len(matches) if matches else 0
 
@@ -374,12 +380,12 @@ def start_cross_match(args):
     file_types = ["jpg", "png", "jpeg"]
 
     input_images = []
-    for file_ext in file_types:
-        input_images.extend(glob.glob(str(input_images_path / ("*." + file_ext))))
-
     panoramic_images = []
     for file_ext in file_types:
-        panoramic_images.extend(glob.glob(str(panoramic_images_path / ("*." + file_ext))))
+        input_images.extend(glob.glob(str(input_images_path / ("**/*." + file_ext)), recursive=args.recurse_dirs))
+
+    for file_ext in file_types:
+        panoramic_images.extend(glob.glob(str(panoramic_images_path / ("**/*." + file_ext)), recursive=args.recurse_dirs))
 
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)
@@ -410,6 +416,7 @@ if __name__ == '__main__':
 
     cross_match_parser.add_argument("-o", "--output-dir", type=pathlib.Path, help="Path to output directory")
     cross_match_parser.add_argument("-c", "--cache-features",  action='store_true')
+    cross_match_parser.add_argument("-r", "--recurse-dirs",  action='store_true')
 
     match_parser = subparsers.add_parser('match')
 

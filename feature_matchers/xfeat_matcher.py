@@ -40,6 +40,11 @@ class XFeatMatcher:
     
     def match_points(self, pts1, des1, pts2, des2):
         if self.use_lighterglue:
+            if len(pts1["keypoints"]) == 0 or len(pts2["keypoints"]) == 0:
+                log.debug("No keypoints in at least one image, skipping")
+                return None, None, None
+
+
             points1, points2, good_matches = self.feature_detector.match_lighterglue(pts1, pts2, 0.82)
             if len(points1) >= self.min_keypoints and len(points2) >= self.min_keypoints and len(good_matches > self.match_threshold):
                 H, inliers = cv2.findHomography(points1, points2, cv2.USAC_MAGSAC, 4., maxIters=700,
