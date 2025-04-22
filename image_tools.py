@@ -48,7 +48,7 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any]
                 if file_id in imgs:
                     log.warning("Image with the name %s already present in data base. Skipping...", file_id)
                     continue
-                im = cv2.imread(str(in_img))
+                im = cv2.imdecode(np.fromfile(str(in_img), np.uint8), cv2.IMREAD_UNCHANGED)
                 if max_image_size > 0:
                     imgs[file_id] = resize_image(im, max_image_size)
                 else:

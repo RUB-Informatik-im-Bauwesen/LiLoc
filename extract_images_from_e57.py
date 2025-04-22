@@ -9,7 +9,6 @@ import cv2 as cv
 import pye57.e57
 import tqdm
 
-
 import pathlib
 
 from helpers import NumpyArrayEncoder
@@ -31,19 +30,19 @@ def quaternion_to_euler(x, y, z, w):
     sin_yaw = 2.0 * (w * z + x * y)
     cos_yaw = 1.0 - 2.0 * (y * y + z * z)
     yaw = np.arctan2(sin_yaw, cos_yaw)
-    
+
     # Pitch (y-axis rotation)
     sin_pitch = 2.0 * (w * y - z * x)
     if np.abs(sin_pitch) >= 1:
         pitch = np.copysign(np.pi / 2, sin_pitch)  # Use 90 degrees if out of range
     else:
         pitch = np.arcsin(sin_pitch)
-    
+
     # Roll (x-axis rotation)
     sin_roll = 2.0 * (w * x + y * z)
     cos_roll = 1.0 - 2.0 * (x * x + y * y)
     roll = np.arctan2(sin_roll, cos_roll)
-    
+
     return yaw, pitch, roll
 
 
@@ -94,6 +93,7 @@ def rotation_matrix_to_quaternion(matrix):
 
     return np.array([w, x, y, z])
 
+
 # ==============
 # e57 Extraction
 # ==============
@@ -124,7 +124,7 @@ def extract_images(pc: pye57.E57):
         imagesFound += 1
 
         parameters.append(read_image_parameters(imNode))
-        
+
     print(f"Found {imagesFound} images")
     return images, parameters
 
@@ -147,14 +147,14 @@ def read_image_parameters(image_node):
         "ty": pose_node[1][1].value(),
         "tz": pose_node[1][2].value(),
     }
-    
+
     camera_node = image_node["pinholeRepresentation"]
     intrinsics = {
-        "focalLength":     camera_node["focalLength"].value(),
-        "imageHeight":     camera_node["imageHeight"].value(),
-        "imageWidth":      camera_node["imageWidth"].value(),
-        "pixelHeight":     camera_node["pixelHeight"].value(),
-        "pixelWidth":      camera_node["pixelWidth"].value(),
+        "focalLength": camera_node["focalLength"].value(),
+        "imageHeight": camera_node["imageHeight"].value(),
+        "imageWidth": camera_node["imageWidth"].value(),
+        "pixelHeight": camera_node["pixelHeight"].value(),
+        "pixelWidth": camera_node["pixelWidth"].value(),
         "principalPointX": camera_node["principalPointX"].value(),
         "principalPointY": camera_node["principalPointY"].value()
     }
@@ -163,9 +163,9 @@ def read_image_parameters(image_node):
     intrinsics["focalLengthPixelsX"] = intrinsics["focalLength"] / intrinsics["pixelWidth"]
     intrinsics["focalLengthPixelsY"] = intrinsics["focalLength"] / intrinsics["pixelHeight"]
     parameters = {
-                "pose": pose,
-                "intrinsics": intrinsics
-            }
+        "pose": pose,
+        "intrinsics": intrinsics
+    }
     return parameters
 
 
@@ -219,10 +219,10 @@ def extract_e57_pose(file, *args, write_imgs=False, render_img_from_rgb=False):
 
         pose_dict[name] = {
             "pose":
-            {
-                "translation": pose_tr,
-                "rotation": pose_rot
-            },
+                {
+                    "translation": pose_tr,
+                    "rotation": pose_rot
+                },
             "images": image_parameters
         }
 
@@ -234,7 +234,6 @@ def extract_e57_pose(file, *args, write_imgs=False, render_img_from_rgb=False):
                 cv.imwrite(f"images/{fname}", image)
             image_dict[fname] = image
             image_p["file"] = fname
-
 
     with open("scanner_poses.json", "w") as f:
         json.dump(pose_dict, f, cls=NumpyArrayEncoder, indent=2)
@@ -251,8 +250,8 @@ def render_from_rgb(pc: pye57.E57):
     print(head.rotation_matrix)
     pts = np.vstack([points["cartesianX"], points["cartesianY"], points["cartesianZ"]])
     col = np.vstack([points["colorRed"], points["colorGreen"], points["colorBlue"]])
-    print(pts[...,0])
-    print(col[...,0])
+    print(pts[..., 0])
+    print(col[..., 0])
     print(pts.shape)
 
     imsize = 2048
@@ -268,41 +267,41 @@ def render_from_rgb(pc: pye57.E57):
         [-1, 0, 0, 0],
         [0, -1, 0, 0],
         [0, 0, -1, 0],
-        [0, 0,  0, 1]
+        [0, 0, 0, 1]
     ], dtype=np.float64)
 
     c_e_front = np.array([
-        [1, 0,  0, 0],
+        [1, 0, 0, 0],
         [0, 0, -1, 0],
-        [0, 1,  0, 0],
-        [0, 0,  0, 1]
+        [0, 1, 0, 0],
+        [0, 0, 0, 1]
     ], dtype=np.float64)
 
     c_e_back = np.array([
-        [-1,  0, 0, 0],
-        [ 0,  0,-1, 0],
-        [ 0, -1, 0, 0],
-        [ 0,  0, 0, 1]
+        [-1, 0, 0, 0],
+        [0, 0, -1, 0],
+        [0, -1, 0, 0],
+        [0, 0, 0, 1]
     ], dtype=np.float64)
 
     c_e_right = np.array([
-        [ 0,-1, 0, 0],
-        [ 0, 0,-1, 0],
-        [ 1, 0, 0, 0],
-        [ 0, 0, 0, 1]
+        [0, -1, 0, 0],
+        [0, 0, -1, 0],
+        [1, 0, 0, 0],
+        [0, 0, 0, 1]
     ], dtype=np.float64)
 
     c_e_left = np.array([
-        [ 0, 1,  0, 0],
-        [ 0, 0, -1, 0],
-        [-1, 0,  0, 0],
-        [ 0, 0,  0, 1]
+        [0, 1, 0, 0],
+        [0, 0, -1, 0],
+        [-1, 0, 0, 0],
+        [0, 0, 0, 1]
     ], dtype=np.float64)
 
     c_i = np.array([
         [1, 0, 0, 0],
         [0, 1, 0, 0],
-        [0,   0,   1, 0]
+        [0, 0, 1, 0]
     ], dtype=np.float64)
     images = [
         render_from_pov(pts, c_e_front, c_i, col, imsize),
@@ -314,19 +313,24 @@ def render_from_rgb(pc: pye57.E57):
     ]
 
     q_front = rotation_matrix_to_quaternion(c_e_front)
-    q_left  = rotation_matrix_to_quaternion(c_e_left )
-    q_back  = rotation_matrix_to_quaternion(c_e_back )
+    q_left = rotation_matrix_to_quaternion(c_e_left)
+    q_back = rotation_matrix_to_quaternion(c_e_back)
     q_right = rotation_matrix_to_quaternion(c_e_right)
-    q_up    = rotation_matrix_to_quaternion(c_e_up   )
-    q_down  = rotation_matrix_to_quaternion(c_e_down )
+    q_up = rotation_matrix_to_quaternion(c_e_up)
+    q_down = rotation_matrix_to_quaternion(c_e_down)
 
     image_params = [
-        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_front[0], "rx": q_front[1], "ry": q_front[2], "rz": q_front[3]}},
-        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_right[0], "rx": q_right[1], "ry": q_right[2], "rz": q_right[3]}},
-        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_back [0], "rx": q_back [1], "ry": q_back [2], "rz": q_back [3]}},
-        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_left [0], "rx": q_left [1], "ry": q_left [2], "rz": q_left [3]}},
-        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_up   [0], "rx": q_up   [1], "ry": q_up   [2], "rz": q_up   [3]}},
-        {"pose": {"tx": t[0] , "ty": t[1], "tz": t[2], "rw": q_down [0], "rx": q_down [1], "ry": q_down [2], "rz": q_down [3]}}
+        {"pose": {"tx": t[0], "ty": t[1], "tz": t[2], "rw": q_front[0], "rx": q_front[1], "ry": q_front[2],
+                  "rz": q_front[3]}},
+        {"pose": {"tx": t[0], "ty": t[1], "tz": t[2], "rw": q_right[0], "rx": q_right[1], "ry": q_right[2],
+                  "rz": q_right[3]}},
+        {"pose": {"tx": t[0], "ty": t[1], "tz": t[2], "rw": q_back[0], "rx": q_back[1], "ry": q_back[2],
+                  "rz": q_back[3]}},
+        {"pose": {"tx": t[0], "ty": t[1], "tz": t[2], "rw": q_left[0], "rx": q_left[1], "ry": q_left[2],
+                  "rz": q_left[3]}},
+        {"pose": {"tx": t[0], "ty": t[1], "tz": t[2], "rw": q_up[0], "rx": q_up[1], "ry": q_up[2], "rz": q_up[3]}},
+        {"pose": {"tx": t[0], "ty": t[1], "tz": t[2], "rw": q_down[0], "rx": q_down[1], "ry": q_down[2],
+                  "rz": q_down[3]}}
     ]
 
     return images, image_params
@@ -335,7 +339,7 @@ def render_from_rgb(pc: pye57.E57):
 def render_from_pov(pts, c_e, c_i, col, imsize):
     pts = np.vstack((pts, np.ones((pts.shape[1]))))
     pc_cam = (c_i @ (c_e @ pts))
-    pc_cam[:2,...] = pc_cam[:2,...] / pc_cam[2,...]
+    pc_cam[:2, ...] = pc_cam[:2, ...] / pc_cam[2, ...]
     #pc_cam = np.round(pc_cam, 0).astype(np.int32)
     pc_and_col = np.vstack([pc_cam, col])
     img = np.zeros((imsize, imsize, 4), dtype=np.uint8)
@@ -350,26 +354,32 @@ def render_from_pov(pts, c_e, c_i, col, imsize):
         if px < 0 or px >= imsize or py < 0 or py >= imsize or p[2] < 0 or p[2] > zBuf[px, py]:
             continue
 
-        img [px, py, 0] = p[5]
-        img [px, py, 1] = p[4]
-        img [px, py, 2] = p[3]
-        img [px, py, 3] = 255
-        zBuf[px, py]    = p[2]
+        img[px, py, 0] = p[5]
+        img[px, py, 1] = p[4]
+        img[px, py, 2] = p[3]
+        img[px, py, 3] = 255
+        zBuf[px, py] = p[2]
 
     # Dilate alpha using Blackhat to only get a mask of closed pixels
-    alpha = np.array(cv2.morphologyEx(img[...,3], cv2.MORPH_BLACKHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (5,5))), dtype=np.uint8)
+    alpha = np.array(
+        cv2.morphologyEx(img[..., 3], cv2.MORPH_BLACKHAT, cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))),
+        dtype=np.uint8)
     # Inpaint where possible
-    img = cv2.inpaint(img[...,:3], alpha, 5, cv.INPAINT_TELEA)
+    img = cv2.inpaint(img[..., :3], alpha, 5, cv.INPAINT_TELEA)
 
     return img.astype(np.uint8)
 
 
-if __name__ == "__main__":
+def start():
     import argparse
     parser = argparse.ArgumentParser(description="LiLoc Point Cloud Image Extractor Tool")
-    parser.add_argument("point_cloud", metavar="pc", type=pathlib.Path)
+    parser.add_argument("point_cloud", metavar="pc", type=pathlib.Path, help="The e57 point cloud to extract images from")
     parser.add_argument("-o", "--output-dir", type=pathlib.Path, help="Path to output directory", default=None)
-    parser.add_argument("-r", "--rgb", action='store_true')
+    parser.add_argument("-r", "--rgb", action='store_true', help=
+    """ Render the images from point cloud RGB values. 
+        Use this if your point cloud does not store images but has RGB values. 
+        Will take some time.
+        """)
 
     args = parser.parse_args()
 
@@ -390,3 +400,7 @@ if __name__ == "__main__":
     for imgname, img in images.items():
         cv2.imwrite(str(outpath.joinpath(imgname)), img)
     write_camera_poses(poses, str(outpath.joinpath("camera_poses.txt")))
+
+
+if __name__ == "__main__":
+    start()

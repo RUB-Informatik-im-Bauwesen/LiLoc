@@ -1,5 +1,3 @@
-# import matplotlib.pyplot as plt
-import argparse
 import json
 import os
 
@@ -12,8 +10,6 @@ import sys
 import cv2
 import numpy as np
 
-from feature_matchers.sift import SIFTMatcher
-from feature_matchers.xfeat_matcher import XFeatMatcher
 from helpers import NumpyArrayEncoder, KeypointEncoder, multiencoder_factory, DMatchEncoder
 from image_tools import read_images
 
@@ -136,7 +132,15 @@ def write_match_images(output_dir, img_a, img_a_kpts, img_b, img_b_kpts, match_i
 
 
 class ExhaustiveMatching:
-    def __init__(self, img_set, max_image_size=2048, matcher=None, output_dir=""):
+    def __init__(self, img_set: list[str], max_image_size=2048, matcher=None, output_dir=""):
+        """
+        Exhaustive Matching for image sets. All images are matched to all other images in the set.
+
+        :param img_set: List of image files or file paths to read
+        :param max_image_size: If positive, the images are scaled to this value, retaining aspect ratio.
+        :param matcher: Matcher class. Should support a find_feature(img) method and a match_points(pts1, des1, pts2, des2) method. See feature_matchers for more info.
+        :param output_dir: Path to write the results to. Leave empty to discard results.
+        """
         self.img_set_features = {}
 
         self.match_matrix = None
@@ -147,6 +151,7 @@ class ExhaustiveMatching:
         if matcher:
             self.matcher = matcher
         else:
+            from feature_matchers.sift import SIFTMatcher
             self.matcher = SIFTMatcher()
 
         self.img_set_names, self.img_set = read_images(img_set, max_image_size)
@@ -158,6 +163,9 @@ class ExhaustiveMatching:
         self.img_set_features.update(_img_set_features)
 
     def find_matches(self):
+        if len(self.img_set_features) == 0:
+            self.find_features(skip_existing=True)
+
         len_imgs = len(self.img_set_names)
         self.match_matrix = np.zeros((len_imgs, len_imgs))
         self.matches = []
@@ -210,6 +218,15 @@ class ExhaustiveMatching:
 
 class CrossMatching:
     def __init__(self, img_set_a, img_set_b, max_image_size=2048, matcher=None, output_dir=""):
+        """
+        Exhaustive Matching for image sets. All images are matched to all other images in the set.
+
+        :param img_set_a: List of image files or file paths to read for image set A
+        :param img_set_b: List of image files or file paths to read for image set B
+        :param max_image_size: If positive, the images are scaled to this value, retaining aspect ratio.
+        :param matcher: Matcher class. Should support a find_feature(img) method and a match_points(pts1, des1, pts2, des2) method. See feature_matchers for more info.
+        :param output_dir: Path to write the results to. Leave empty to discard results.
+        """
         self.img_set_a_features = {}
         self.img_set_b_features = {}
 
@@ -221,6 +238,7 @@ class CrossMatching:
         if matcher:
             self.matcher = matcher
         else:
+            from feature_matchers.sift import SIFTMatcher
             self.matcher = SIFTMatcher()
 
         log.info("Reading Image Set A")
@@ -242,6 +260,9 @@ class CrossMatching:
         self.img_set_b_features.update(_img_set_b_features)
 
     def find_matches(self):
+        if len(self.img_set_a_features) == 0 or len(self.img_set_b_features) == 0:
+            self.find_features(skip_existing=True)
+
         len_a = len(self.img_set_a_names)
         len_b = len(self.img_set_b_names)
         self.match_matrix = np.zeros((len_a, len_b))
@@ -253,6 +274,8 @@ class CrossMatching:
             for i_p, img_a_id in enumerate(self.img_set_a_names):
                 img_set_a_pts, img_set_a_des = self.img_set_a_features[img_a_id]
                 img_pts, img_des = self.img_set_b_features[img_b_id]
+
+                matches = None
                 try:
                     matches, matches_mask, matrix = self.matcher.match_points(img_set_a_pts, img_set_a_des, img_pts, img_des)
                 except Exception as e:
@@ -344,16 +367,29 @@ def start_exhaustive_match(args):
 
     input_images = []
     for file_ext in file_types:
-        input_images.extend(glob.glob(str(input_images_path / ("*." + file_ext))))
+        if args.recurse_dirs:
+            input_images.extend(glob.glob(str(input_images_path / ("**/*." + file_ext)), recursive=True))
+        else:
+            input_images.extend(glob.glob(str(input_images_path / ("*." + file_ext))))
 
     if args.output_dir:
+        os.makedirs(args.output_dir, exist_ok=True)
+    else:
+        args.output_dir = input_images_path / "matches"
         os.makedirs(args.output_dir, exist_ok=True)
 
     if len(input_images) == 0:
         log.error("No input images found in %s", str(input_images_path))
         return
 
-    em = ExhaustiveMatching(input_images, matcher=XFeatMatcher(), output_dir=args.output_dir)
+    if args.matcher == "SIFTkNN":
+        from feature_matchers.sift import SIFTMatcher
+        matcher = SIFTMatcher()
+    else:
+        from feature_matchers.xfeat_matcher import XFeatMatcher
+        matcher = XFeatMatcher()
+
+    em = ExhaustiveMatching(input_images, matcher=matcher, output_dir=str(args.output_dir))
 
     if args.cache_features:
         em.load_from_cache()
@@ -382,15 +418,32 @@ def start_cross_match(args):
     input_images = []
     panoramic_images = []
     for file_ext in file_types:
-        input_images.extend(glob.glob(str(input_images_path / ("**/*." + file_ext)), recursive=args.recurse_dirs))
+        if args.recurse_dirs:
+            input_images.extend(glob.glob(str(input_images_path / ("**/*." + file_ext)), recursive=True))
+        else:
+            input_images.extend(glob.glob(str(input_images_path / ("*." + file_ext))))
 
     for file_ext in file_types:
-        panoramic_images.extend(glob.glob(str(panoramic_images_path / ("**/*." + file_ext)), recursive=args.recurse_dirs))
+        if args.recurse_dirs:
+            panoramic_images.extend(glob.glob(str(panoramic_images_path / ("**/*." + file_ext)), recursive=True))
+        else:
+            panoramic_images.extend(glob.glob(str(panoramic_images_path / ("*." + file_ext))))
+
 
     if args.output_dir:
         os.makedirs(args.output_dir, exist_ok=True)
+    else:
+        args.output_dir = panoramic_images_path / "matches"
+        os.makedirs(args.output_dir, exist_ok=True)
 
-    fm = CrossMatching(panoramic_images, input_images, matcher=XFeatMatcher(), output_dir=args.output_dir)
+    if args.matcher == "SIFTkNN":
+        from feature_matchers.sift import SIFTMatcher
+        matcher = SIFTMatcher()
+    else:
+        from feature_matchers.xfeat_matcher import XFeatMatcher
+        matcher = XFeatMatcher()
+
+    fm = CrossMatching(panoramic_images, input_images, matcher=matcher, output_dir=args.output_dir)
 
     if args.cache_features:
         fm.load_from_cache()
@@ -400,39 +453,3 @@ def start_cross_match(args):
         fm.save_to_cache()
 
     fm.find_matches()
-
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="LiLoc Image Feature Matcher Tool")
-
-
-    parser.add_argument("-d", "--debug",  action='store_true')
-
-    subparsers = parser.add_subparsers(help='Select a matching type', dest="action")
-    cross_match_parser = subparsers.add_parser('cross_match')
-
-    cross_match_parser.add_argument("panoramic_image_folder", metavar="panIMG", type=pathlib.Path)
-    cross_match_parser.add_argument("input_image_folder", metavar="IMG", type=pathlib.Path)
-
-    cross_match_parser.add_argument("-o", "--output-dir", type=pathlib.Path, help="Path to output directory")
-    cross_match_parser.add_argument("-c", "--cache-features",  action='store_true')
-    cross_match_parser.add_argument("-r", "--recurse-dirs",  action='store_true')
-
-    match_parser = subparsers.add_parser('match')
-
-    match_parser.add_argument("input_image_folder", metavar="IMG", type=pathlib.Path)
-    match_parser.add_argument("-o", "--output-dir", type=pathlib.Path, help="Path to output directory")
-    match_parser.add_argument("-c", "--cache-features",  action='store_true')
-
-
-    args = parser.parse_args()
-
-
-    if args.debug:
-        log.setLevel(logging.DEBUG)
-        coloredlogs.install(logger=log, level=logging.DEBUG)
-
-    if args.action == "cross_match":
-        start_cross_match(args)
-    elif args.action == "match":
-        start_exhaustive_match(args)
