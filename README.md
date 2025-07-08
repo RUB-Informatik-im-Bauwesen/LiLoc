@@ -52,3 +52,9 @@ If there are no images, use the `--rgb` flag to render rectified images from the
 
 *To be published at ISARC 2025 in Montréal, Canada*
 
+## Acknowledgement
+
+*This repository is based on parts of the research project carried out at the request of
+the BMDV, represented by the Federal Highway Research
+Institute, under research project No. 69.0017/2023. The
+developers are solely responsible for the content.*
