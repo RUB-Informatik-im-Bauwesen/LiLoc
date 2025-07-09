@@ -8,3 +8,4 @@ pye57
 pillow
 matplotlib
 coloredlogs
+trimesh
