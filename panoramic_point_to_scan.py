@@ -48,6 +48,26 @@ def _read_e57(pc_e57: pye57.E57):
     return points, colors
 
 
+def find_rays(rays: list, point_cloud_filename: str, show=False, images=None, reference_model_path=None, reference_model_transform=None):
+    pc_e57 = pye57.E57(point_cloud_filename)
+
+    header = pc_e57.get_header(0)
+    scanner_tr = header.translation
+    points, colors = _read_e57(pc_e57)
+
+    base_rot = np.identity(4)
+    base_rot[:3, :3] = header.rotation_matrix
+
+    out_3d_points = [find_ray(in_2d_point, points, scanner_tr, base_rot) for in_2d_point in rays]
+
+    if show:
+        pc = trimesh.points.PointCloud(points, colors)
+        visualize(pc, out_3d_points, scanner_tr, base_rot, images, reference_model_path=reference_model_path,
+                  reference_model_transform=reference_model_transform)
+
+    return [o[0] if o is not None else None for o in out_3d_points]
+
+
 def find_all_points(in_2d_points: list, point_cloud_filename: str, show=False, images=None, reference_model_path=None, reference_model_transform=None):
     pc_e57 = pye57.E57(point_cloud_filename)
 
@@ -68,7 +88,7 @@ def find_all_points(in_2d_points: list, point_cloud_filename: str, show=False, i
 
 
 def visualize(pc, out_3d_points, scanner_tr, scanner_rot, images=None, reference_model_path=None, reference_model_transform=None):
-    laser_scanner_viz = trimesh.load_mesh("rtc_360_model.obj").apply_scale(scanner_viz_scale).apply_translation(scanner_tr)
+    laser_scanner_viz = trimesh.load_mesh("example/rtc_360_model.obj").apply_scale(scanner_viz_scale).apply_translation(scanner_tr)
     trimesh.Trimesh()
     scene: trimesh.scene.Scene = trimesh.scene.Scene()
     scene.add_geometry(pc, "pointcloud")
@@ -135,6 +155,48 @@ def visualize(pc, out_3d_points, scanner_tr, scanner_rot, images=None, reference
     viewer.push_handlers(on_key_press)
     viewer.reset_view()
     pyglet.app.run()
+
+
+def find_ray(ray, points, scanner_tr, scanner_rot):
+    # image_dimensions = np.array([8192, 3393])
+    # image_point = in_2d_point
+    # image_point = np.array([0, image_dimensions[1]/4+100])*2
+    # Spherical to cartesian
+    ray_direction = ray
+    ray_origin = scanner_tr
+
+    print("Ray:", ray_origin, ray_direction)
+    # ray_path = trimesh.load_path([ray_origin, ray_origin + ray_direction * 15])
+
+    cast_length = 6
+    cast_radius = 0.1
+    cast_origin = translation_matrix(ray_origin + ray_direction * (cast_length / 2))
+    print("base_rot", trimesh.transformations.euler_from_matrix(scanner_rot))
+    cast_cylinder = (trimesh.primitives.Cylinder(radius=cast_radius, height=cast_length)
+                     .apply_transform(rotation_matrix(-np.pi / 2, [0, 1, 0]))
+                     .apply_transform(cast_origin))
+
+    print("Finding closest point...")
+    points_in_cylinder = points[cast_cylinder.contains(points)]
+    n_points_in_cylinder = points_in_cylinder.shape[0]
+    if n_points_in_cylinder > 0:
+        print("Points in cylinder =", n_points_in_cylinder)
+        point_distance = trimesh.points.point_plane_distance(points_in_cylinder, ray_origin, ray_direction)
+        closest_points_indices = np.argsort(point_distance)
+        closest_point = points_in_cylinder[closest_points_indices[0], ...]
+
+        # quick and dirty normal estimation
+        second_closest_point = points_in_cylinder[closest_points_indices[1], ...]
+        third_closest_point = points_in_cylinder[closest_points_indices[2], ...]
+        normal = np.cross(closest_point - second_closest_point, closest_point - third_closest_point)
+        normal /= np.linalg.norm(normal)
+        if np.dot(normal, ray_origin - closest_point) < 0:
+            normal *= -1  # flip if facing away from the ray origin
+
+        print("Closest point =", closest_point)
+        return closest_point, normal
+    return None
+
 
 def find_point(in_2d_point, points, scanner_tr, scanner_rot):
     # image_dimensions = np.array([8192, 3393])

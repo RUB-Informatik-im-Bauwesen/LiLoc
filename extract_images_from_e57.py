@@ -1,5 +1,6 @@
 import os
 from gettext import translation
+from traceback import print_exception
 
 import cv2
 import pye57
@@ -9,7 +10,7 @@ import cv2 as cv
 import pye57.e57
 import tqdm
 
-import pathlib
+import pathlib, glob
 
 from helpers import NumpyArrayEncoder
 
@@ -175,11 +176,11 @@ def read_image_parameters(image_node):
 
 def write_camera_poses(poses, fname):
     with open(fname, "w") as f:
-        for location in poses.values():
+        for posename, location in poses.items():
             for im in location["images"]:
                 pose = im["pose"]
                 yaw, pitch, roll = quaternion_to_euler(pose['rx'], pose['ry'], pose['rz'], pose['rw'])
-                f.write(f"{pose['tx']} {pose['ty']} {pose['tz']} {yaw} {pitch} {roll}\n")
+                f.write(f"{posename}: {pose['tx']} {pose['ty']} {pose['tz']} {yaw} {pitch} {roll}\n")
 
 
 def extract_e57_pose(file, *args, write_imgs=False, render_img_from_rgb=False):
@@ -207,7 +208,11 @@ def extract_e57_pose(file, *args, write_imgs=False, render_img_from_rgb=False):
         if render_img_from_rgb:
             images, image_parameters = render_from_rgb(pc_e57)
         else:
-            images, image_parameters = extract_images(pc_e57)
+            try:
+                images, image_parameters = extract_images(pc_e57)
+            except Exception as e:
+                print_exception(e)
+                continue
 
         if len(images) == 6:
             image_parameters[0]["facing"] = "00_front"
@@ -231,11 +236,13 @@ def extract_e57_pose(file, *args, write_imgs=False, render_img_from_rgb=False):
         for i, (image, image_p) in enumerate(zip(images, image_parameters)):
             fname = f"{name}_{image_p.get('facing', i)}.jpg"
             if write_imgs:
-                cv.imwrite(f"images/{fname}", image)
+                imname = f"images/{fname}"
+                print(f"Writing {imname}")
+                cv.imwrite(imname, image)
             image_dict[fname] = image
             image_p["file"] = fname
 
-    with open("scanner_poses.json", "w") as f:
+    with open("data/straelen_pano/scanner_poses.json", "w") as f:
         json.dump(pose_dict, f, cls=NumpyArrayEncoder, indent=2)
 
     return pose_dict, image_dict
@@ -387,19 +394,22 @@ def start():
     if path.is_file():
         files = [path]
     else:
-        files = list(path.glob("*.e57"))
+        files = sorted(path.glob("*.e57"))
 
     outpath: pathlib.Path = args.output_dir
     if outpath is None:
         outpath = path if path.is_dir() else path.parent
 
     if len(files) == 0:
-        print("No files found in " + path)
+        print("No files found in " + str(path))
+        return
 
     poses, images = extract_e57_pose(*files, render_img_from_rgb=args.rgb)
     for imgname, img in images.items():
         cv2.imwrite(str(outpath.joinpath(imgname)), img)
     write_camera_poses(poses, str(outpath.joinpath("camera_poses.txt")))
+    with open(str(outpath.joinpath("data/straelen_pano/scanner_poses.json")), "w") as f:
+        json.dump(poses, f, cls=NumpyArrayEncoder, indent=2)
 
 
 if __name__ == "__main__":
