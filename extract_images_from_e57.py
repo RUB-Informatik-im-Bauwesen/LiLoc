@@ -140,10 +140,10 @@ def read_image(image_node):
 def read_image_parameters(image_node):
     pose_node = image_node["pose"]
     pose = {
-        "rw": pose_node[0][0].value(),
-        "rx": pose_node[0][1].value(),
-        "ry": pose_node[0][2].value(),
-        "rz": pose_node[0][3].value(),
+        "rx": pose_node[0][0].value(),
+        "ry": pose_node[0][1].value(),
+        "rz": pose_node[0][2].value(),
+        "rw": pose_node[0][3].value(),
         "tx": pose_node[1][0].value(),
         "ty": pose_node[1][1].value(),
         "tz": pose_node[1][2].value(),
@@ -242,8 +242,8 @@ def extract_e57_pose(file, *args, write_imgs=False, render_img_from_rgb=False):
             image_dict[fname] = image
             image_p["file"] = fname
 
-    with open("data/straelen_pano/scanner_poses.json", "w") as f:
-        json.dump(pose_dict, f, cls=NumpyArrayEncoder, indent=2)
+    # with open("data/straelen_pano/scanner_poses.json", "w") as f:
+    #     json.dump(pose_dict, f, cls=NumpyArrayEncoder, indent=2)
 
     return pose_dict, image_dict
 
@@ -408,7 +408,7 @@ def start():
     for imgname, img in images.items():
         cv2.imwrite(str(outpath.joinpath(imgname)), img)
     write_camera_poses(poses, str(outpath.joinpath("camera_poses.txt")))
-    with open(str(outpath.joinpath("data/straelen_pano/scanner_poses.json")), "w") as f:
+    with open(str(outpath.joinpath("scanner_poses.json")), "w") as f:
         json.dump(poses, f, cls=NumpyArrayEncoder, indent=2)
 
 

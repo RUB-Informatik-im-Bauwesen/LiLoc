@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 import pye57
 import trimesh
@@ -58,11 +60,14 @@ def find_rays(rays: list, point_cloud_filename: str, show=False, images=None, re
     base_rot = np.identity(4)
     base_rot[:3, :3] = header.rotation_matrix
 
-    out_3d_points = [find_ray(in_2d_point, points, scanner_tr, base_rot) for in_2d_point in rays]
+    #yz_flip = np.array([[1,0,0],[0,0,-1],[0,1,0]])
+    #rays = [yz_flip @ ray for ray in rays]
+
+    out_3d_points = [find_ray(ray, points, scanner_tr, base_rot) for ray in rays]
 
     if show:
         pc = trimesh.points.PointCloud(points, colors)
-        visualize(pc, out_3d_points, scanner_tr, base_rot, images, reference_model_path=reference_model_path,
+        visualize(pc, rays, out_3d_points, scanner_tr, base_rot, images, reference_model_path=reference_model_path,
                   reference_model_transform=reference_model_transform)
 
     return [o[0] if o is not None else None for o in out_3d_points]
@@ -82,19 +87,22 @@ def find_all_points(in_2d_points: list, point_cloud_filename: str, show=False, i
 
     if show:
         pc = trimesh.points.PointCloud(points, colors)
-        visualize(pc, out_3d_points, scanner_tr, base_rot, images, reference_model_path=reference_model_path, reference_model_transform=reference_model_transform)
+        visualize(pc, rays, out_3d_points, scanner_tr, base_rot, images, reference_model_path=reference_model_path, reference_model_transform=reference_model_transform)
 
     return [o[0] if o is not None else None for o in out_3d_points]
 
 
-def visualize(pc, out_3d_points, scanner_tr, scanner_rot, images=None, reference_model_path=None, reference_model_transform=None):
+def visualize(pc, rays, out_3d_points, scanner_tr, scanner_rot, images=None, reference_model_path=None, reference_model_transform=None):
     laser_scanner_viz = trimesh.load_mesh("example/rtc_360_model.obj").apply_scale(scanner_viz_scale).apply_translation(scanner_tr)
     trimesh.Trimesh()
     scene: trimesh.scene.Scene = trimesh.scene.Scene()
     scene.add_geometry(pc, "pointcloud")
     scene.add_geometry(laser_scanner_viz)
-    for index, out in enumerate(out_3d_points):
+    for index, (out, ray) in enumerate(itertools.zip_longest(out_3d_points, rays)):
         if out is None:
+            ray /= np.linalg.norm(ray)
+            ray_path = trimesh.load_path([scanner_tr, scanner_tr + ray * 10])
+            scene.add_geometry(ray_path)
             continue
         (out_pt, out_normal) = out
         ray_path = trimesh.load_path([scanner_tr, out_pt])
@@ -163,6 +171,7 @@ def find_ray(ray, points, scanner_tr, scanner_rot):
     # image_point = np.array([0, image_dimensions[1]/4+100])*2
     # Spherical to cartesian
     ray_direction = ray
+    ray_direction /= np.linalg.norm(ray_direction)
     ray_origin = scanner_tr
 
     print("Ray:", ray_origin, ray_direction)
