@@ -49,8 +49,7 @@ python extract_images_from_e57.py pointcloud.e57
 If there are no images, use the `--rgb` flag to render rectified images from the point cloud's rgb values.
 
 ## Paper
-
-*To be published at ISARC 2025 in Montréal, Canada*
+P. Herbers, L. von Rössing, and M. König, "LiLoc - Defect Image Localization in Laser Scans", in *Proceedings of the 42nd International Symposium on Automation and Robotics in Construction (ISARC)*, Montreal, Canada, 2025. doi: [10.22260/isarc2025/0198](https://doi.org/10.22260/ISARC2025/0198)
 
 ## Acknowledgement
 
