@@ -140,10 +140,10 @@ def read_image(image_node):
 def read_image_parameters(image_node):
     pose_node = image_node["pose"]
     pose = {
-        "rx": pose_node[0][0].value(),
-        "ry": pose_node[0][1].value(),
-        "rz": pose_node[0][2].value(),
-        "rw": pose_node[0][3].value(),
+        "rw": pose_node[0][0].value(),
+        "rx": pose_node[0][1].value(),
+        "ry": pose_node[0][2].value(),
+        "rz": pose_node[0][3].value(),
         "tx": pose_node[1][0].value(),
         "ty": pose_node[1][1].value(),
         "tz": pose_node[1][2].value(),

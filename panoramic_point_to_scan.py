@@ -57,11 +57,14 @@ def find_rays(rays: list, point_cloud_filename: str, show=False, images=None, re
     scanner_tr = header.translation
     points, colors = _read_e57(pc_e57)
 
-    base_rot = np.identity(4)
+
+    base_rot = np.identity(3)
     base_rot[:3, :3] = header.rotation_matrix
+
 
     #yz_flip = np.array([[1,0,0],[0,0,-1],[0,1,0]])
     #rays = [yz_flip @ ray for ray in rays]
+    print(f"Rays: {rays}")
 
     out_3d_points = [find_ray(ray, points, scanner_tr, base_rot) for ray in rays]
 
@@ -105,6 +108,7 @@ def visualize(pc, rays, out_3d_points, scanner_tr, scanner_rot, images=None, ref
             scene.add_geometry(ray_path)
             continue
         (out_pt, out_normal) = out
+        out_normal = -ray
         ray_path = trimesh.load_path([scanner_tr, out_pt])
         print("Placing image at", out_pt, out_normal)
 
@@ -121,13 +125,21 @@ def visualize(pc, rays, out_3d_points, scanner_tr, scanner_rot, images=None, ref
                         .apply_transform(translation_matrix(out_pt))
                         .apply_transform(translation_matrix(out_normal))
                         )
+            scene.add_geometry(image_viz)
             
 
         # scene.add_geometry(cast_cylinder)
         scene.add_geometry(closest_point_viz)
-        scene.add_geometry(image_viz)
         scene.add_geometry(ray_path)
-    
+
+    arr_x = trimesh.load_path([np.array((0, 0, 0)), np.array((1, 0, 0))])
+    arr_x.colors = [(255, 0, 0, 255)]
+    arr_y = trimesh.load_path([np.array((0, 0, 0)), np.array((0, 1, 0))])
+    arr_y.colors = [(0, 255, 0, 255)]
+    arr_z = trimesh.load_path([np.array((0, 0, 0)), np.array((0, 0, 1))])
+    arr_z.colors = [(0, 0, 255, 255)]
+    scene.add_geometry([arr_x, arr_y, arr_z])
+
     if reference_model_path is not None:
         reference_model = trimesh.load_mesh(reference_model_path)
         if reference_model_transform is not None:
@@ -172,13 +184,14 @@ def find_ray(ray, points, scanner_tr, scanner_rot):
     # Spherical to cartesian
     ray_direction = ray
     ray_direction /= np.linalg.norm(ray_direction)
+    #ray_direction @= np.linalg.inv(scanner_rot)
     ray_origin = scanner_tr
 
     print("Ray:", ray_origin, ray_direction)
     # ray_path = trimesh.load_path([ray_origin, ray_origin + ray_direction * 15])
 
-    cast_length = 6
-    cast_radius = 0.1
+    cast_length = 20
+    cast_radius = 0.3
     cast_origin = translation_matrix(ray_origin + ray_direction * (cast_length / 2))
     print("base_rot", trimesh.transformations.euler_from_matrix(scanner_rot))
     cast_cylinder = (trimesh.primitives.Cylinder(radius=cast_radius, height=cast_length)
@@ -195,15 +208,20 @@ def find_ray(ray, points, scanner_tr, scanner_rot):
         closest_point = points_in_cylinder[closest_points_indices[0], ...]
 
         # quick and dirty normal estimation
-        second_closest_point = points_in_cylinder[closest_points_indices[1], ...]
-        third_closest_point = points_in_cylinder[closest_points_indices[2], ...]
-        normal = np.cross(closest_point - second_closest_point, closest_point - third_closest_point)
-        normal /= np.linalg.norm(normal)
-        if np.dot(normal, ray_origin - closest_point) < 0:
-            normal *= -1  # flip if facing away from the ray origin
+        try:
+            second_closest_point = points_in_cylinder[closest_points_indices[1], ...]
+            third_closest_point = points_in_cylinder[closest_points_indices[2], ...]
+            normal = np.cross(closest_point - second_closest_point, closest_point - third_closest_point)
+            normal /= np.linalg.norm(normal)
+            if np.dot(normal, ray_origin - closest_point) < 0:
+                normal *= -1  # flip if facing away from the ray origin
+        except:
+            print("Not enough points for normals")
+            normal = np.array([1,0,0])
 
         print("Closest point =", closest_point)
         return closest_point, normal
+    print("No points in cylinder for", ray_direction)
     return None
 
 

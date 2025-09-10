@@ -9,14 +9,14 @@ class ImagePlane(Primitive):
         return {
             "kind": "cylinder",
             "transform": self.primitive.transform.tolist(),
-            "image_path": self.primitive.image_path
+            "image": self.primitive.image
         }
 
-    def __init__(self, image_path: str, center=None, transform=None):
+    def __init__(self, image: str, center=None, transform=None):
         super().__init__()
 
-        defaults = {"image_path": None, "transform": np.eye(4)}
-        constructor = {"image_path": image_path}
+        defaults = {"image": None, "transform": np.eye(4), "npimage": None}
+        constructor = {"image": image}
         # center is a helper method for "transform"
         # since a sphere is rotationally symmetric
         if center is not None:
@@ -34,7 +34,10 @@ class ImagePlane(Primitive):
         )
 
     def _create_mesh(self):
-        image: Image = Image.open(self.primitive.image_path)
+        if self.primitive.image is str:
+            image: Image = Image.open(self.primitive.image)
+        else:
+            image = Image.fromarray(self.primitive.image.astype('uint8'), 'BGR')
         texture_viz = TextureVisuals(np.array([[0., 0.], [1., 0.], [1., 1.], [0., 1.]]), image=image)
         self.visual = texture_viz
         vertices = np.array([[-0.5, -0.5, 0, 0], [0.5, -0.5, 0, 0], [0.5, 0.5, 0, 0], [-0.5, 0.5, 0, 0]])
