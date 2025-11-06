@@ -9,3 +9,4 @@ pillow
 matplotlib
 coloredlogs
 trimesh
+pyvis

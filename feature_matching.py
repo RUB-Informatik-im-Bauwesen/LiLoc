@@ -204,7 +204,10 @@ class ExhaustiveMatching:
         log.info("Found %d matches", len(self.matches))
         if self.output_dir:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
-                json.dump(self.matches, f, indent=2, cls=NumpyArrayEncoder)
+                json.dump({
+                    "matches": self.matches,
+                    "image_set": list(self.img_set.keys())
+                }, f, indent=2, cls=NumpyArrayEncoder)
             plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.svg")
             plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.png")
             log.info("Results written to %s", str(self.output_dir))
@@ -303,7 +306,11 @@ class CrossMatching:
         log.info("Found %d matches", len(self.matches))
         if self.output_dir:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
-                json.dump(self.matches, f, indent=2, cls=NumpyArrayEncoder)
+                json.dump({
+                    "matches": self.matches,
+                    "image_set_a": list(self.img_set_a.keys()),
+                    "image_set_b": list(self.img_set_b.keys())
+                }, f, indent=2, cls=NumpyArrayEncoder)
             plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.svg")
             plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.png")
             log.info("Results written to %s", str(self.output_dir))
