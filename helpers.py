@@ -13,7 +13,7 @@ class NumpyArrayEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
+        return JSONEncoder.default(self, obj)
 
 
 class KeypointEncoder(JSONEncoder):

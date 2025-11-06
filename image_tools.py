@@ -1,4 +1,3 @@
-
 import cv2
 import numpy as np
 import os
@@ -6,6 +5,7 @@ import uuid
 
 from typing import Tuple, List, Any, Dict
 
+from tqdm import tqdm
 
 import logging, coloredlogs
 
@@ -48,7 +48,7 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any]
                 if file_id in imgs:
                     log.warning("Image with the name %s already present in data base. Skipping...", file_id)
                     continue
-                im = cv2.imdecode(np.fromfile(str(in_img), np.uint8), cv2.IMREAD_UNCHANGED)
+                im = cv2.imdecode(np.fromfile(str(in_img), np.uint8), cv2.IMREAD_COLOR)
                 if max_image_size > 0:
                     imgs[file_id] = resize_image(im, max_image_size)
                 else:
@@ -58,6 +58,135 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any]
             log.warning("Could not read image %s: %s", in_img, str(e))
 
     return keys, imgs
+
+
+def pano_as_cube_map(in_pano: str, max_image_size: int = 0) -> tuple[list[str | Any], dict[str | Any, ndarray | Any]]:
+    pass
+
+
+def cylindrical_to_cube_map(cylindrical_image_path, output_size=(1024, 1024), outpath=""):
+    """
+    Transform a cylindrical equidistant projection image into six cube-mapped images.
+
+    Parameters:
+    - cylindrical_image_path: Path to the cylindrical equidistant projection image.
+    - output_size: Size of the output cube map images (default is 512x512).
+
+    Returns:
+    - A list of six numpy arrays representing the cube map faces (right, left, top, bottom, front, back).
+    """
+
+    # Load the cylindrical image using OpenCV
+    cylindrical_image = cv2.imread(cylindrical_image_path)
+    if cylindrical_image is None:
+        raise ValueError("Could not load the image from the specified path.")
+
+    # Get the dimensions of the cylindrical image
+    height, width = cylindrical_image.shape[:2]
+
+    # Create six blank images for the cube map faces
+    right = np.zeros((output_size[1], output_size[0], 3), dtype=np.uint8)
+    left = np.zeros((output_size[1], output_size[0], 3), dtype=np.uint8)
+    top = np.zeros((output_size[1], output_size[0], 3), dtype=np.uint8)
+    bottom = np.zeros((output_size[1], output_size[0], 3), dtype=np.uint8)
+    front = np.zeros((output_size[1], output_size[0], 3), dtype=np.uint8)
+    back = np.zeros((output_size[1], output_size[0], 3), dtype=np.uint8)
+
+    # Define the output size
+    output_width, output_height = output_size
+
+    c_e_up = np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ], dtype=np.float64)
+
+    c_e_down = np.array([
+        [-1, 0, 0, 0],
+        [0, -1, 0, 0],
+        [0, 0, -1, 0],
+        [0, 0, 0, 1]
+    ], dtype=np.float64)
+
+    c_e_front = np.array([
+        [1, 0, 0, 0],
+        [0, 0, -1, 0],
+        [0, 1, 0, 0],
+        [0, 0, 0, 1]
+    ], dtype=np.float64)
+
+    c_e_back = np.array([
+        [-1, 0, 0, 0],
+        [0, 0, -1, 0],
+        [0, -1, 0, 0],
+        [0, 0, 0, 1]
+    ], dtype=np.float64)
+
+    c_e_right = np.array([
+        [0, -1, 0, 0],
+        [0, 0, -1, 0],
+        [1, 0, 0, 0],
+        [0, 0, 0, 1]
+    ], dtype=np.float64)
+
+    c_e_left = np.array([
+        [0, 1, 0, 0],
+        [0, 0, -1, 0],
+        [-1, 0, 0, 0],
+        [0, 0, 0, 1]
+    ], dtype=np.float64)
+
+    c_mat = [c_e_right, c_e_left, c_e_up, c_e_down, c_e_front, c_e_back, ]
+    c_img = [right, left, top, bottom, front, back, ]
+    c_name = ["00_right.png", "01_left.png", "02_top.png", "03_bottom.png", "04_front.png", "05_back.png"]
+
+    # Map the cylindrical image to the cube map faces
+    for mat, img, name in zip(c_mat, c_img, c_name):
+        #mat_inv = np.linalg.inv(mat)
+        for y in tqdm(range(0, output_height)):
+            for x in range(0, output_width):
+                # Normalize the coordinates to the range [-1, 1]
+                nx = (x / output_width) * 2 - 1
+                ny = (y / output_height) * 2 - 1
+
+                # Convert to Euclidean coordinates
+                # nx = np.cos(theta) * np.sin(phi)
+                # ny = np.sin(theta) * np.sin(phi)
+                # nz = np.cos(theta)
+
+                c = np.array((nx, ny, 1, 0))
+
+                v = c @ mat
+                v /= np.linalg.norm(v)
+                vx = v[0]
+                vy = v[1]
+                vz = v[2]
+
+                theta = (-np.arctan2(vy, vx)) % (2 * np.pi)
+                phi = np.arccos(vz) % np.pi
+
+                # if -1 < theta < 1 and -1 < phi < 1:
+                cx_p = theta / (2 * np.pi) * width
+                cy_p = phi / np.pi * height
+                cx_u = int(np.ceil(cx_p))
+                cy_u = int(np.ceil(cy_p))
+                cx_l = int(np.floor(cx_p))
+                cy_l = int(np.floor(cy_p))
+                t = cy_p % 1
+                s = cx_p % 1
+                p_ll = cylindrical_image[cy_l % height, cx_l % width].astype(np.float32)
+                p_ul = cylindrical_image[cy_u % height, cx_l % width].astype(np.float32)
+                p_lu = cylindrical_image[cy_l % height, cx_u % width].astype(np.float32)
+                p_uu = cylindrical_image[cy_u % height, cx_u % width].astype(np.float32)
+                p = ((1 - t) * (1 - s) * p_ll +
+                     t * (1 - s) * p_ul +
+                     (1 - t) * s * p_lu +
+                     t * s * p_uu)
+                img[y, x] = np.rint(p).astype(np.uint8)
+        cv2.imwrite(outpath + name, img)
+
+    return [right, left, top, bottom, front, back]
 
 
 def resize_image(image, max_size):
@@ -93,7 +222,6 @@ def resize_image(image, max_size):
     return resized_image
 
 
-
 def transform_image(img: np.ndarray, matrix: np.ndarray):
     cv2.warpPerspective(img, matrix)
 
@@ -111,3 +239,12 @@ def transform_point(points: np.ndarray, matrix: np.ndarray, input_size=None, tar
     if out_pt.shape[0] == 1:
         out_pt = out_pt.reshape(1, 2)
     return out_pt
+
+
+if __name__ == "__main__":
+    cylindrical_to_cube_map(r"C:\dev\liloc\data\StrassenNRW_Siegen\img\1.jpg", output_size=(2048,2048), outpath=r"C:\dev\liloc\data\StrassenNRW_Siegen\img\1")
+    cylindrical_to_cube_map(r"C:\dev\liloc\data\StrassenNRW_Siegen\img\2.jpg", output_size=(2048,2048), outpath=r"C:\dev\liloc\data\StrassenNRW_Siegen\img\2")
+    cylindrical_to_cube_map(r"C:\dev\liloc\data\StrassenNRW_Siegen\img\3.jpg", output_size=(2048,2048), outpath=r"C:\dev\liloc\data\StrassenNRW_Siegen\img\3")
+    cylindrical_to_cube_map(r"C:\dev\liloc\data\StrassenNRW_Siegen\img\4.jpg", output_size=(2048,2048), outpath=r"C:\dev\liloc\data\StrassenNRW_Siegen\img\4")
+    cylindrical_to_cube_map(r"C:\dev\liloc\data\StrassenNRW_Siegen\img\5.jpg", output_size=(2048,2048), outpath=r"C:\dev\liloc\data\StrassenNRW_Siegen\img\5")
+    cylindrical_to_cube_map(r"C:\dev\liloc\data\StrassenNRW_Siegen\img\6.jpg", output_size=(2048,2048), outpath=r"C:\dev\liloc\data\StrassenNRW_Siegen\img\6")
