@@ -17,7 +17,7 @@ log = logging.getLogger("LiLoc")
 coloredlogs.install(logger=log, level=logging.DEBUG)
 
 
-def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any], dict[str | Any, ndarray | Any]]:
+def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any], dict[str | Any, ndarray | Any], dict[str | dict]]:
     """
     Reads a list of images and returns a dictionary with unique identifiers as keys and image data as values.
 
@@ -31,9 +31,10 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any]
         max_image_size (int): If positive, resizes the images while keeping the aspect ratio
 
     Returns:
-        (list, dict): A list with unique identifiers (UUIDs or file names) and a dictionary with the keys as indices and image data as values.
+        (list, dict, dict): A list with unique identifiers (UUIDs or file names) a dictionary with the keys as indices and image data as values, and a dict with additional data.
     """
     imgs = {}
+    data = {}
     keys = []
     for in_img in in_imgs:
         try:
@@ -53,11 +54,12 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any]
                     imgs[file_id] = resize_image(im, max_image_size)
                 else:
                     imgs[file_id] = im
+                data[file_id] = {"filepath": os.path.realpath(in_img)}
                 keys.append(file_id)
         except Exception as e:
             log.warning("Could not read image %s: %s", in_img, str(e))
 
-    return keys, imgs
+    return keys, imgs, data
 
 
 def pano_as_cube_map(in_pano: str, max_image_size: int = 0) -> tuple[list[str | Any], dict[str | Any, ndarray | Any]]:

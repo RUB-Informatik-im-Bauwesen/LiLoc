@@ -154,7 +154,7 @@ class ExhaustiveMatching:
             from feature_matchers.sift import SIFTMatcher
             self.matcher = SIFTMatcher()
 
-        self.img_set_names, self.img_set = read_images(img_set, max_image_size)
+        self.img_set_names, self.img_set, self.img_set_data = read_images(img_set, max_image_size)
 
     def find_features(self, skip_existing=False):
         log.info("Finding features in Image Set")
@@ -206,7 +206,7 @@ class ExhaustiveMatching:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
                 json.dump({
                     "matches": self.matches,
-                    "image_set": list(self.img_set.keys())
+                    "image_set": self.img_set_data
                 }, f, indent=2, cls=NumpyArrayEncoder)
             plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.svg")
             plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.png")
@@ -245,10 +245,10 @@ class CrossMatching:
             self.matcher = SIFTMatcher()
 
         log.info("Reading Image Set A")
-        self.img_set_a_names, self.img_set_a = read_images(img_set_a, max_image_size)
+        self.img_set_a_names, self.img_set_a, self.img_set_a_data = read_images(img_set_a, max_image_size)
 
         log.info("Reading Image Set B")
-        self.img_set_b_names, self.img_set_b = read_images(img_set_b, max_image_size)
+        self.img_set_b_names, self.img_set_b, self.img_set_b_data = read_images(img_set_b, max_image_size)
 
         log.info("Finished reading images")
 
@@ -308,8 +308,8 @@ class CrossMatching:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
                 json.dump({
                     "matches": self.matches,
-                    "image_set_a": list(self.img_set_a.keys()),
-                    "image_set_b": list(self.img_set_b.keys())
+                    "image_set_a": self.img_set_a_data,
+                    "image_set_b": self.img_set_b_data
                 }, f, indent=2, cls=NumpyArrayEncoder)
             plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.svg")
             plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.png")
