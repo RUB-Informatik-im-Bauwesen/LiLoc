@@ -42,9 +42,9 @@ def main():
     from feature_matching import start_cross_match, start_exhaustive_match
 
     if args.action == "cross_match":
-        start_cross_match(args)
+        start_cross_match(vars(args))
     elif args.action == "match":
-        start_exhaustive_match(args)
+        start_exhaustive_match(vars(args))
 
 
 if __name__ == "__main__":
