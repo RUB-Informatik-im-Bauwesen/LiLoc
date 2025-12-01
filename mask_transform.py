@@ -4,11 +4,12 @@ from logging import DEBUG
 import numpy as np
 import cv2
 import logging
+import pathlib
 
 log = logging.getLogger("LiLoc")
 
 mask_key = "_mask.png"
-mask_folder = "/masks/"
+mask_folder = "masks"
 
 def alpha_to_black(img):
     alpha_channel = img[:, :, 3]
@@ -31,20 +32,20 @@ def display_mask_difference(folder, match):
     masks = {}
     imgs = {}
 
-
-    mask_path_then = folder + mask_folder + img_key_then + mask_key
+    folder = pathlib.Path(folder)
+    mask_path_then = folder / mask_folder / (img_key_then + mask_key)
     log.info(f"Loading mask {mask_path_then}")
     masks[img_key_then] = cv2.imread(mask_path_then, cv2.IMREAD_UNCHANGED)
 
-    mask_path_now = folder + mask_folder + img_key_now + mask_key
+    mask_path_now = folder / mask_folder / (img_key_now + mask_key)
     log.info(f"Loading mask {mask_path_now}")
     masks[img_key_now] = cv2.imread(mask_path_now, cv2.IMREAD_UNCHANGED)
 
-    img_path_then = folder + img_key_then + ".jpg"
+    img_path_then = folder / (img_key_then + ".jpg")
     log.info(f"Loading image {img_path_then}")
     imgs[img_key_then] = cv2.imread(img_path_then)
 
-    img_path_now = folder + img_key_now + ".jpg"
+    img_path_now = folder / (img_key_now + ".jpg")
     log.info(f"Loading image {img_path_now}")
     imgs[img_key_now] = cv2.imread(img_path_now)
 
@@ -107,7 +108,7 @@ def test():
 
     folder = args.folder
 
-    with open(folder + "/matches/matches.json") as f:
+    with open(folder / "matches/matches.json") as f:
         mdict = json.load(f)
         matches = mdict["matches"]
         images = mdict["image_set"]
