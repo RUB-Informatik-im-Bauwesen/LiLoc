@@ -11,7 +11,7 @@ import cv2
 import numpy as np
 
 from helpers import NumpyArrayEncoder, KeypointEncoder, multiencoder_factory, DMatchEncoder
-from image_tools import read_images
+from image_tools import read_images, write_image
 
 # Create a logger object.
 log = logging.getLogger("LiLoc")
@@ -125,11 +125,11 @@ def plot_match_matrix(match_matrix, img_set_a_names, img_set_b_names, outfile=No
 def write_match_images(output_dir, img_a, img_a_kpts, img_b, img_b_kpts, match_id, matches_mask, matrix):
     matched_frame = cv2.drawMatches(img_a, img_a_kpts, img_b, img_b_kpts, matches_mask, None,
                                     matchColor=(0, 200, 0), flags=2)
-    cv2.imwrite(f"{output_dir}/{match_id}_matches.jpg", matched_frame)
+    write_image(f"{output_dir}/{match_id}_matches.jpg", matched_frame)
     a_to_b = cv2.warpPerspective(img_b, np.linalg.inv(matrix), (img_a.shape[1], img_a.shape[0]))
-    cv2.imwrite(f"{output_dir}/{match_id}_tf.jpg", a_to_b)
+    write_image(f"{output_dir}/{match_id}_tf.jpg", a_to_b)
     overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
-    cv2.imwrite(f"{output_dir}/{match_id}_overlay.jpg", overlay)
+    write_image(f"{output_dir}/{match_id}_overlay.jpg", overlay)
 
 
 class ExhaustiveMatching:

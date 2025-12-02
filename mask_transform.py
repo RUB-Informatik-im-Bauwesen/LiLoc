@@ -6,6 +6,8 @@ import cv2
 import logging
 import pathlib
 
+from image_tools import read_image
+
 log = logging.getLogger("LiLoc")
 
 mask_key = "_mask.png"
@@ -35,19 +37,19 @@ def display_mask_difference(folder, match):
     folder = pathlib.Path(folder)
     mask_path_then = folder / mask_folder / (img_key_then + mask_key)
     log.info(f"Loading mask {mask_path_then}")
-    masks[img_key_then] = cv2.imread(mask_path_then, cv2.IMREAD_UNCHANGED)
+    masks[img_key_then] = read_image(mask_path_then)
 
     mask_path_now = folder / mask_folder / (img_key_now + mask_key)
     log.info(f"Loading mask {mask_path_now}")
-    masks[img_key_now] = cv2.imread(mask_path_now, cv2.IMREAD_UNCHANGED)
+    masks[img_key_now] = read_image(mask_path_now)
 
     img_path_then = folder / (img_key_then + ".jpg")
     log.info(f"Loading image {img_path_then}")
-    imgs[img_key_then] = cv2.imread(img_path_then)
+    imgs[img_key_then] = read_image(img_path_then)
 
     img_path_now = folder / (img_key_now + ".jpg")
     log.info(f"Loading image {img_path_now}")
-    imgs[img_key_now] = cv2.imread(img_path_now)
+    imgs[img_key_now] = read_image(img_path_now)
 
     try:
         assert imgs[img_key_then] is not None

@@ -16,6 +16,15 @@ from numpy import ndarray
 log = logging.getLogger("LiLoc")
 coloredlogs.install(logger=log, level=logging.DEBUG)
 
+def read_image(path):
+    with open(path, "rb") as f:
+        img = cv2.imdecode(np.fromfile(str(path), np.uint8), cv2.IMREAD_UNCHANGED)
+    return img
+
+def write_image(path, img):
+    with open(path, "wb") as f:
+        success, bytes_ = cv2.imencode(".jpg", img)
+        f.write(bytes_.tobytes())
 
 def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any], dict[str | Any, ndarray | Any], dict[str | dict]]:
     """
