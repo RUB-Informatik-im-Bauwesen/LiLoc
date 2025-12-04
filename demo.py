@@ -119,7 +119,6 @@ def dict_to_camera_matrix(cam_dict):
     P = K @ R
     return K, R
 
-test_file_path = "C:/sciebo/BRIX/07 - Data/Straelen/"
 
 def main():
 
@@ -206,18 +205,20 @@ def transform_points(points, scan_img_mat_ext, scan_img_mat_int):
     return rays
 
 
+test_file_path = "C:/dev/liloc/a6/"
+
 if __name__ == "__main__":
     main()
 
     scan_img = "Job 009- HiWi Raum 004_00_front"
-    with open(test_file_path + "straelen_pano/scanner_poses.json") as f:
+    with open(test_file_path + "pano/512/scanner_poses.json") as f:
         camera_poses = json.load(f)
 
 
     point_cloud_name = list(
         filter(lambda v: scan_img in list(map(lambda l: l["file"].split(".")[0], camera_poses[v]["images"])),
                camera_poses.keys()))[0]
-    point_cloud_filename = test_file_path + "/scan/" + point_cloud_name + ".e57"
+    point_cloud_filename = test_file_path + "/pc/" + point_cloud_name + ".e57"
     point_cloud_data = camera_poses[point_cloud_name]
     cam_dict = list(filter(lambda l: l["file"].startswith(scan_img), point_cloud_data["images"]))[0]
     scan_img_mat_int, scan_img_mat_ext = dict_to_camera_matrix(cam_dict)
