@@ -16,9 +16,11 @@ from numpy import ndarray
 log = logging.getLogger("LiLoc")
 coloredlogs.install(logger=log, level=logging.DEBUG)
 
-def read_image(path):
+def read_image(path, max_size=-1):
     with open(path, "rb") as f:
         img = cv2.imdecode(np.fromfile(str(path), np.uint8), cv2.IMREAD_UNCHANGED)
+        if max_size > 0:
+            img = resize_image(img, max_size)
     return img
 
 def write_image(path, img):
@@ -235,6 +237,11 @@ def resize_image(image, max_size):
 
 def transform_image(img: np.ndarray, matrix: np.ndarray):
     cv2.warpPerspective(img, matrix)
+
+def transform_and_overlay(img_a, img_b, matrix):
+    a_to_b = cv2.warpPerspective(img_b, matrix, (img_a.shape[1], img_a.shape[0]))
+    overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
+    return overlay
 
 
 def transform_point(points: np.ndarray, matrix: np.ndarray, input_size=None, target_size=None):
