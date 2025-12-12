@@ -414,6 +414,8 @@ def start_cross_match(args):
         sys.exit(1)
 
     file_types = ["jpg", "png", "jpeg"]
+    if os.name == 'posix':
+        file_types.extend(["JPG", "PNG", "JPEG"])
 
     input_images = []
     panoramic_images = []
