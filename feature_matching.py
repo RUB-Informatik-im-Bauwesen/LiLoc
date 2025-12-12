@@ -11,11 +11,12 @@ import cv2
 import numpy as np
 
 from helpers import NumpyArrayEncoder, KeypointEncoder, multiencoder_factory, DMatchEncoder
-from image_tools import read_images
+from image_tools import read_images, write_image
 
 # Create a logger object.
 log = logging.getLogger("LiLoc")
-coloredlogs.install(logger=log, level=logging.INFO)
+if __name__ == '__main__':
+    coloredlogs.install(logger=log, level=logging.INFO)
 
 
 def save_keypoint_cache(name, keypoints, descriptors, cache_dir):
@@ -124,11 +125,11 @@ def plot_match_matrix(match_matrix, img_set_a_names, img_set_b_names, outfile=No
 def write_match_images(output_dir, img_a, img_a_kpts, img_b, img_b_kpts, match_id, matches_mask, matrix):
     matched_frame = cv2.drawMatches(img_a, img_a_kpts, img_b, img_b_kpts, matches_mask, None,
                                     matchColor=(0, 200, 0), flags=2)
-    cv2.imwrite(f"{output_dir}/{match_id}_matches.jpg", matched_frame)
+    write_image(f"{output_dir}/{match_id}_matches.jpg", matched_frame)
     a_to_b = cv2.warpPerspective(img_b, np.linalg.inv(matrix), (img_a.shape[1], img_a.shape[0]))
-    cv2.imwrite(f"{output_dir}/{match_id}_tf.jpg", a_to_b)
+    write_image(f"{output_dir}/{match_id}_tf.jpg", a_to_b)
     overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
-    cv2.imwrite(f"{output_dir}/{match_id}_overlay.jpg", overlay)
+    write_image(f"{output_dir}/{match_id}_overlay.jpg", overlay)
 
 
 class ExhaustiveMatching:
@@ -154,7 +155,7 @@ class ExhaustiveMatching:
             from feature_matchers.sift import SIFTMatcher
             self.matcher = SIFTMatcher()
 
-        self.img_set_names, self.img_set = read_images(img_set, max_image_size)
+        self.img_set_names, self.img_set, self.img_set_data = read_images(img_set, max_image_size)
 
     def find_features(self, skip_existing=False):
         log.info("Finding features in Image Set")
@@ -204,7 +205,10 @@ class ExhaustiveMatching:
         log.info("Found %d matches", len(self.matches))
         if self.output_dir:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
-                json.dump(self.matches, f, indent=2, cls=NumpyArrayEncoder)
+                json.dump({
+                    "matches": self.matches,
+                    "image_set": self.img_set_data
+                }, f, indent=2, cls=NumpyArrayEncoder)
             plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.svg")
             plot_match_matrix(self.match_matrix, self.img_set_names, self.img_set_names, str(self.output_dir) + "/match_matrix.png")
             log.info("Results written to %s", str(self.output_dir))
@@ -242,10 +246,10 @@ class CrossMatching:
             self.matcher = SIFTMatcher()
 
         log.info("Reading Image Set A")
-        self.img_set_a_names, self.img_set_a = read_images(img_set_a, max_image_size)
+        self.img_set_a_names, self.img_set_a, self.img_set_a_data = read_images(img_set_a, max_image_size)
 
         log.info("Reading Image Set B")
-        self.img_set_b_names, self.img_set_b = read_images(img_set_b, max_image_size)
+        self.img_set_b_names, self.img_set_b, self.img_set_b_data = read_images(img_set_b, max_image_size)
 
         log.info("Finished reading images")
 
@@ -303,7 +307,11 @@ class CrossMatching:
         log.info("Found %d matches", len(self.matches))
         if self.output_dir:
             with open(str(self.output_dir) + "/matches.json", 'w') as f:
-                json.dump(self.matches, f, indent=2, cls=NumpyArrayEncoder)
+                json.dump({
+                    "matches": self.matches,
+                    "image_set_a": self.img_set_a_data,
+                    "image_set_b": self.img_set_b_data
+                }, f, indent=2, cls=NumpyArrayEncoder)
             plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.svg")
             plot_match_matrix(self.match_matrix, self.img_set_a_names, self.img_set_b_names, str(self.output_dir) + "/match_matrix.png")
             log.info("Results written to %s", str(self.output_dir))
@@ -357,7 +365,7 @@ class CrossMatching:
 
 
 def start_exhaustive_match(args):
-    input_images_path: pathlib.Path = args.input_image_folder
+    input_images_path: pathlib.Path = args["input_image_folder"]
 
     if not input_images_path.exists():
         log.error(f"Cannot find input image folder at {input_images_path}")
@@ -367,43 +375,43 @@ def start_exhaustive_match(args):
 
     input_images = []
     for file_ext in file_types:
-        if args.recurse_dirs:
+        if args["recurse_dirs"]:
             input_images.extend(glob.glob(str(input_images_path / ("**/*." + file_ext)), recursive=True))
         else:
             input_images.extend(glob.glob(str(input_images_path / ("*." + file_ext))))
 
-    if args.output_dir:
-        os.makedirs(args.output_dir, exist_ok=True)
+    if args["output_dir"]:
+        os.makedirs(args["output_dir"], exist_ok=True)
     else:
-        args.output_dir = input_images_path / "matches"
-        os.makedirs(args.output_dir, exist_ok=True)
+        args["output_dir"] = input_images_path / "matches"
+        os.makedirs(args["output_dir"], exist_ok=True)
 
     if len(input_images) == 0:
         log.error("No input images found in %s", str(input_images_path))
         return
 
-    if args.matcher == "SIFTkNN":
+    if args["matcher"] == "SIFTkNN":
         from feature_matchers.sift import SIFTMatcher
         matcher = SIFTMatcher()
     else:
         from feature_matchers.xfeat_matcher import XFeatMatcher
         matcher = XFeatMatcher()
 
-    em = ExhaustiveMatching(input_images, matcher=matcher, output_dir=str(args.output_dir))
+    em = ExhaustiveMatching(input_images, matcher=matcher, output_dir=str(args["output_dir"]))
 
-    if args.cache_features:
+    if args["cache_features"]:
         em.load_from_cache()
     em.find_features(skip_existing=True)
 
-    if args.cache_features:
+    if args["cache_features"]:
         em.save_to_cache()
 
     em.find_matches()
 
 
 def start_cross_match(args):
-    input_images_path: pathlib.Path = args.input_image_folder
-    panoramic_images_path: pathlib.Path = args.panoramic_image_folder
+    input_images_path: pathlib.Path = args["input_image_folder"]
+    panoramic_images_path: pathlib.Path = args["panoramic_image_folder"]
 
     if not panoramic_images_path.exists():
         log.error(f"Cannot find panoramic image folder at {panoramic_images_path}")
@@ -420,38 +428,38 @@ def start_cross_match(args):
     input_images = []
     panoramic_images = []
     for file_ext in file_types:
-        if args.recurse_dirs:
+        if args["recurse_dirs"]:
             input_images.extend(glob.glob(str(input_images_path / ("**/*." + file_ext)), recursive=True))
         else:
             input_images.extend(glob.glob(str(input_images_path / ("*." + file_ext))))
 
     for file_ext in file_types:
-        if args.recurse_dirs:
+        if args["recurse_dirs"]:
             panoramic_images.extend(glob.glob(str(panoramic_images_path / ("**/*." + file_ext)), recursive=True))
         else:
             panoramic_images.extend(glob.glob(str(panoramic_images_path / ("*." + file_ext))))
 
 
-    if args.output_dir:
-        os.makedirs(args.output_dir, exist_ok=True)
+    if args["output_dir"]:
+        os.makedirs(args["output_dir"], exist_ok=True)
     else:
-        args.output_dir = panoramic_images_path / "matches"
-        os.makedirs(args.output_dir, exist_ok=True)
+        args["output_dir"] = panoramic_images_path / "matches"
+        os.makedirs(args["output_dir"], exist_ok=True)
 
-    if args.matcher == "SIFTkNN":
+    if args["matcher"] == "SIFTkNN":
         from feature_matchers.sift import SIFTMatcher
         matcher = SIFTMatcher()
     else:
         from feature_matchers.xfeat_matcher import XFeatMatcher
         matcher = XFeatMatcher()
 
-    fm = CrossMatching(panoramic_images, input_images, matcher=matcher, output_dir=args.output_dir)
+    fm = CrossMatching(panoramic_images, input_images, matcher=matcher, output_dir=args["output_dir"])
 
-    if args.cache_features:
+    if args["cache_features"]:
         fm.load_from_cache()
     fm.find_features(skip_existing=True)
 
-    if args.cache_features:
+    if args["cache_features"]:
         fm.save_to_cache()
 
     fm.find_matches()

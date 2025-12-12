@@ -16,8 +16,19 @@ from numpy import ndarray
 log = logging.getLogger("LiLoc")
 coloredlogs.install(logger=log, level=logging.DEBUG)
 
+def read_image(path, max_size=-1):
+    with open(path, "rb") as f:
+        img = cv2.imdecode(np.fromfile(str(path), np.uint8), cv2.IMREAD_UNCHANGED)
+        if max_size > 0:
+            img = resize_image(img, max_size)
+    return img
 
-def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any], dict[str | Any, ndarray | Any]]:
+def write_image(path, img):
+    with open(path, "wb") as f:
+        success, bytes_ = cv2.imencode(".jpg", img)
+        f.write(bytes_.tobytes())
+
+def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any], dict[str | Any, ndarray | Any], dict[str | dict]]:
     """
     Reads a list of images and returns a dictionary with unique identifiers as keys and image data as values.
 
@@ -31,9 +42,10 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any]
         max_image_size (int): If positive, resizes the images while keeping the aspect ratio
 
     Returns:
-        (list, dict): A list with unique identifiers (UUIDs or file names) and a dictionary with the keys as indices and image data as values.
+        (list, dict, dict): A list with unique identifiers (UUIDs or file names) a dictionary with the keys as indices and image data as values, and a dict with additional data.
     """
     imgs = {}
+    data = {}
     keys = []
     for in_img in in_imgs:
         try:
@@ -53,11 +65,12 @@ def read_images(in_imgs: list, max_image_size: int = 0) -> tuple[list[str | Any]
                     imgs[file_id] = resize_image(im, max_image_size)
                 else:
                     imgs[file_id] = im
+                data[file_id] = {"filepath": os.path.realpath(in_img)}
                 keys.append(file_id)
         except Exception as e:
             log.warning("Could not read image %s: %s", in_img, str(e))
 
-    return keys, imgs
+    return keys, imgs, data
 
 
 def pano_as_cube_map(in_pano: str, max_image_size: int = 0) -> tuple[list[str | Any], dict[str | Any, ndarray | Any]]:
@@ -224,6 +237,11 @@ def resize_image(image, max_size):
 
 def transform_image(img: np.ndarray, matrix: np.ndarray):
     cv2.warpPerspective(img, matrix)
+
+def transform_and_overlay(img_a, img_b, matrix):
+    a_to_b = cv2.warpPerspective(img_b, matrix, (img_a.shape[1], img_a.shape[0]))
+    overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
+    return overlay
 
 
 def transform_point(points: np.ndarray, matrix: np.ndarray, input_size=None, target_size=None):
