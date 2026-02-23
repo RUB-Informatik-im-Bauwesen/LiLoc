@@ -67,8 +67,12 @@ def display_mask_difference(folder, match):
                                  (imgs[img_key_now].shape[1], imgs[img_key_now].shape[0]))
 
     log.info(f"Computing mask difference")
+
     difference = np.ones_like(masks[img_key_now]) * 255
     difference[..., 3] = np.logical_xor(masks[img_key_now][..., 3] > 0, a_to_b[..., 3] > 0).astype(np.uint8) * 255
+
+    contour_now = cv2.findContours(masks[img_key_now][..., 3], cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contour_then = cv2.findContours(masks[img_key_then][..., 3], cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     log.info(f"Display")
     overlay_now = cv2.addWeighted(imgs[img_key_now], 1, cv2.resize(alpha_to_black(masks[img_key_now]),

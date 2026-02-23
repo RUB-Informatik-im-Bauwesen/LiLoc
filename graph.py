@@ -108,15 +108,15 @@ class LocalizationGraph:
                 match_img = base_dir.replace("\\", "/") + "/" + match["match_id"] + "_matches.jpg"
                 g.add_edge(match["image_a"], match["image_b"],
                            matches=match["matches"],
-                           weight=1000+min(int(match["matches"]), 100),
+                           weight=(1000+np.clip(int(match["matches"]), 100, 1000))/1000,
                            matrix=match["matrix"],
                            title=f"{match['image_a']} <-> {match['image_b']}",
                            match_img=match_img,
                            data_src=data_name)
                 g.add_edge(match["image_b"], match["image_a"],
                            matches=match["matches"],
-                           weight=1000+min(int(match["matches"]), 100),
-                           matrix=np.linalg.inv(match["matrix"]),
+                           weight=(1000+np.clip(int(match["matches"]), 100, 1000))/1000,
+                           matrix=np.linalg.inv(match["matrix"]).tolist(),
                            title=f"{match['image_a']} <-> {match['image_b']}",
                            match_img=match_img,
                            data_src=data_name)
@@ -181,7 +181,7 @@ def main():
     locgraph.build_network()
     paths = locgraph.get_all_node_localizations()
     paths = sorted(paths, key=lambda pa: len(pa))
-    for path in paths[2:4]:
+    for path in paths[2:]:
         print(path)
         matrix = locgraph.get_transform_from_path(path)
         matrices = list([np.array(locgraph.graph.edges[n1,n2]["matrix"]) for n1, n2 in itertools.pairwise(reversed(path))])

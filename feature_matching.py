@@ -437,6 +437,8 @@ def start_cross_match(args):
         else:
             panoramic_images.extend(glob.glob(str(panoramic_images_path / ("*." + file_ext))))
 
+    panoramic_images = sorted(panoramic_images)
+    input_images = sorted(input_images)
 
     if args["output_dir"]:
         os.makedirs(args["output_dir"], exist_ok=True)
