@@ -8,6 +8,7 @@ import numpy as np
 import glob
 import json
 
+from image_tools import read_images
 from panoramic_point_to_scan import scanner_viz_scale
 
 # point_cloud_filename = "/home/patrick/sciebo/BIMKIT_DIENSTKETTE_INFRA1/Kamera-relokalsierung/Daten/RTC360_Abpl m fl Bw an Stütze_Panorama/Punktwolken/Abplatzung+Bewehrung_2m_LR.e57"
@@ -110,81 +111,94 @@ def dict_to_camera_matrix(cam_dict):
     # Quaternion to rotation matrix
     R = quaternion_rotation_matrix([rw,rx,ry,rz])
 
-    t = np.array([[tx], [ty], [tz]])
+    t = np.array([tx, ty, tz])
 
     # [R|t] (3x4)
     #Rt = np.hstack((R, t))
 
     # Camera matrix
     P = K @ R
-    return K, R
+    return K, R, t
 
+from helpers import DataSource
+def visualize(test_file_path, point_cloud_filename):
 
-def main():
+    point_cloud_filename = test_file_path + "/pc/RUB_Parkhaus_2025-03-24_gesamt_10cm.e57"
+    model_file_name = test_file_path + "model/parkhaus_ransac.obj"
+    #model_transform = np.linalg.inv(np.array([
+    #        [0.309558212757, -0.950880110264, 0.000880334934, 8.538056373596],
+    #        [0.950873732567, 0.309559375048, 0.003477090737, -52.835781097412],
+    #        [-0.003578812117, -0.000239274566, 0.999993562698, 56.598762512207],
+    #        [0.000000000000, 0.000000000000, 0.000000000000, 1.000000000000]]
+    #    ))
 
-    point_cloud_filename = test_file_path + "scan/Straelen_2024-01-07 010_5cm.e57"
-    model_file_name = test_file_path + "model/straelen.stl"
-    model_transform = np.linalg.inv(np.array([
-            [0.309558212757, -0.950880110264, 0.000880334934, 8.538056373596],
-            [0.950873732567, 0.309559375048, 0.003477090737, -52.835781097412],
-            [-0.003578812117, -0.000239274566, 0.999993562698, 56.598762512207],
-            [0.000000000000, 0.000000000000, 0.000000000000, 1.000000000000]]
-        ))
+    ds = DataSource(test_file_path + "out/matches_pano_dcim/matches.json")
 
-    in_img_path = test_file_path + "straelen_img/PXL_20240107_110413700.jpg"
-    in_img_overlay_path = test_file_path + "img_raw/PXL_20240107_110925984.jpg"
+    in_img_path = test_file_path + "DCIM/DSC_0036.JPG"
+    #in_img_overlay_path = test_file_path + "img_raw/PXL_20240107_110925984.jpg"
 
-    with open(test_file_path + "straelen_pano/scanner_poses.json") as f:
+    with open(test_file_path + "pano/scanner_poses.json") as f:
         camera_poses = json.load(f)
 
     pts = np.float32([[[0.5, 0.5]]])
 
-
-    matcher = CrossMatching(glob.glob(test_file_path + "pano/*.jpg"), [in_img_path], matcher=XFeatMatcher())
-    matcher.find_features()
-    matcher.find_matches()
-    print(matcher.matches)
-    if len(matcher.matches) > 0:
-        results = matcher.matches[0]
-        print("Visualizing " + str(results))
-        mat = results["matrix"]
+    #matcher = CrossMatching(glob.glob(test_file_path + "pano/*.jpg"), glob.glob(test_file_path + "DCIM/*.jpg"), matcher=XFeatMatcher())
+    #matcher.find_features()
+    #matcher.find_matches()
+    origins = []
+    rays = []
+    images = []
+    for results in ds["matches"][:2]:
+        print("Casting " + str(results))
         img_a_id = results["image_a"]
         img_b_id = results["image_b"]
-        img_a = matcher.img_set_a[img_a_id]
-        img_b = matcher.img_set_b[img_b_id]
+        img_a = ds.get_image(img_a_id)
+        img_b = ds.get_image(img_b_id)
+        origin, ray = match_to_geometry(results, img_a, img_b, camera_poses)
+        origins.append(origin)
+        rays.append(ray)
+        images.append(img_b)
 
-        a_to_b = cv2.warpPerspective(img_b, np.linalg.inv(mat), (img_a.shape[1], img_a.shape[0]))
-        overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
+    # print("relative point:", pan_img_point, pan_img.shape)
+    panoramic_point_to_scan.find_rays(
+        origins,
+        rays,
+        point_cloud_filename,
+        show=True,
+        images=images,
+        #reference_model_path=model_file_name,
+        #reference_model_transform=pose_dict_to_matrix(point_cloud_data["pose"])
+    )
 
-        cv2.imshow(img_b_id, overlay)
-        cv2.waitKey(1000)
-        # print(pts)
+def match_to_geometry(match, img_a, img_b, camera_poses):
+    mat = match["matrix"]
 
-        # Transform from a to b
-        pan_img_points = np.array([[0.5 * img_b.shape[0],0.5*img_b.shape[1],0]])
-        r = mat.T @ pan_img_points.T
-        r = r.T / np.array((img_a.shape[0]*2, img_a.shape[1]*2, 1)) - np.array((0.5,0.5,0))
-        r[...,2] = -1  # z-Coordinate
-        r[...,1] *= -1  # flip y (because pixels count from the top, but camera doesnt)
-        r = r.T
+    #a_to_b = cv2.warpPerspective(img_b, np.linalg.inv(mat), (img_a.shape[1], img_a.shape[0]))
+    #overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
 
-        scan_img = results["image_a"]
-        point_cloud_name = list(filter(lambda v: scan_img in list(map(lambda l: l["file"].split(".")[0],camera_poses[v]["images"])), camera_poses.keys()))[0]
-        point_cloud_filename = test_file_path + "/scan/" + point_cloud_name + ".e57"
-        point_cloud_data = camera_poses[point_cloud_name]
-        scan_img_mat_int, scan_img_mat_ext = dict_to_camera_matrix(list(filter(lambda l: l["file"].startswith(scan_img), point_cloud_data["images"]))[0])
+    #cv2.imshow("debug", overlay)
+    #cv2.waitKey(1000)
+    # print(pts)
 
-        rays = transform_points(r, scan_img_mat_ext, scan_img_mat_int)
+    # Transform from a to b
+    pan_img_points = np.array([[0.5 * img_b.shape[1],0.5*img_b.shape[0],1]])
+    r = np.linalg.inv(mat) @ pan_img_points.T
+    r = r / r[2]
+    r_c = (r.T / np.array((img_a.shape[1]*2, img_a.shape[0]*2, 1)) - np.array((0.5,0.5,0))).T  # to cam coords
+    r_c = np.array((-r_c[1, ...], r_c[0, ...], -r_c[2, ...]))
+    #r[...,2] = -1  # z-Coordinate
+    #r[...,1] *= -1  # flip y (because pixels count from the top, but camera doesnt)
+    #r_c = r_c.T
 
-        # print("relative point:", pan_img_point, pan_img.shape)
-        panoramic_point_to_scan.find_rays(
-            rays,
-            point_cloud_filename,
-            show=True,
-            images=[img_b],
-            reference_model_path=model_file_name,
-            reference_model_transform=pose_dict_to_matrix(point_cloud_data["pose"])
-        )
+    scan_img = match["image_a"]
+    point_cloud_name = list(filter(lambda v: scan_img in list(map(lambda l: l["file"].split(".")[0],camera_poses[v]["images"])), camera_poses.keys()))[0]
+    #print(f"Looking for point cloud {point_cloud_filename}")
+    point_cloud_data = camera_poses[point_cloud_name]
+    scan_img_mat_int, scan_img_mat_ext, origin = dict_to_camera_matrix(list(filter(lambda l: l["file"].startswith(scan_img), point_cloud_data["images"]))[0])
+    # TODO: is the camera matrix ext transform correct?
+    ray = transform_points(r_c, scan_img_mat_ext, scan_img_mat_int)[0]
+    return origin, ray
+
 
 
 def transform_points(points, scan_img_mat_ext, scan_img_mat_int):
@@ -205,29 +219,10 @@ def transform_points(points, scan_img_mat_ext, scan_img_mat_int):
     return rays
 
 
-test_file_path = "C:/dev/liloc/a6/"
 
 if __name__ == "__main__":
-    main()
+    test_file_path = "C:/dev/liloc/data/rub_parkhaus/"
+    point_cloud_filename = test_file_path + "/pc/RUB_Parkhaus_2025-03-24_gesamt_10cm.e57"
 
-    scan_img = "Job 009- HiWi Raum 004_00_front"
-    with open(test_file_path + "pano/512/scanner_poses.json") as f:
-        camera_poses = json.load(f)
+    visualize(test_file_path, point_cloud_filename)
 
-
-    point_cloud_name = list(
-        filter(lambda v: scan_img in list(map(lambda l: l["file"].split(".")[0], camera_poses[v]["images"])),
-               camera_poses.keys()))[0]
-    point_cloud_filename = test_file_path + "/pc/" + point_cloud_name + ".e57"
-    point_cloud_data = camera_poses[point_cloud_name]
-    cam_dict = list(filter(lambda l: l["file"].startswith(scan_img), point_cloud_data["images"]))[0]
-    scan_img_mat_int, scan_img_mat_ext = dict_to_camera_matrix(cam_dict)
-    #scan_img_mat_ext = quaternion_rotation_matrix(np.array([ 0.8203323 , 8e-7, -0.0000674, -0.5718872, ]))
-    #scan_img_mat_ext = np.linalg.inv(quaternion_rotation_matrix(np.array([  0.5800619 , 0.5800629, -0.4044329, -0.4043379])))
-
-    mat = np.array([[0.7694832670580193, -0.22021250783171253, 230.78124907412425], [-0.3040658687378191, 0.7008456393891576, 511.6021592221477], [-0.00020627183996382208, -0.0002454321429763236, 1.0]])
-    rays = transform_points(mat, None, scan_img_mat_ext, scan_img_mat_int)
-    print("Rays:", rays)
-    zeroray = rays[0]
-    print(rot2eul(scan_img_mat_ext))
-    pass

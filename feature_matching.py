@@ -87,6 +87,7 @@ def _find_features(matcher, img_db: dict, skip=None):
             continue
         in_img = img_db[key]
         features = matcher.find_features(in_img)
+        #features[0]["keypoints_norm"] = features[0]["keypoints"] / in_img.shape[1]
         feat_dict[key] = features
         if features is None:
             raise AssertionError("Could not find features in image " + key)
@@ -285,6 +286,7 @@ class CrossMatching:
                 except Exception as e:
                     log.exception(f"Could not match {img_a_id} and {img_b_id}.", exc_info=e)
                     log.debug(f"Could not match {img_a_id} and {img_b_id}.", exc_info=e, stack_info=True)
+                    continue
 
                 self.match_matrix[i_p, i_i] = len(matches) if matches else 0
 

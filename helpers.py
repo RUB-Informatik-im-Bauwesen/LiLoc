@@ -1,9 +1,14 @@
 import json
 from json import JSONEncoder
+from os import PathLike
 from typing import Any, Type
 
 import cv2
 import numpy as np
+
+import image_tools
+
+
 # =======
 # Helpers
 # =======
@@ -48,3 +53,45 @@ def multiencoder_factory(*encoders):
             return super().default(o)
 
     return MultipleJsonEncoders
+
+class DataSource(dict):
+    def __init__(self, matches_file: (str | PathLike), image_type="Localized", name=""):
+        super().__init__()
+        self.matches_file = matches_file
+        self.update(self._load_data())
+        self.image_type = image_type
+        if name:
+            self.name = name
+        else:
+            self.name = str(matches_file)
+        self.data = None
+        self._img_cache = {}
+
+    def _load_data(self):
+        data = {}
+        with open(self.matches_file, 'r') as file:
+            try:
+                data = json.load(file)
+            except json.JSONDecodeError as e:
+                print(f"Error parsing {self.matches_file}: {e}")
+        return data
+
+    def get_image(self, img_key):
+        if img_key in self._img_cache:
+            return self._img_cache[img_key]
+        img_set: dict = self.get("image_set", {})
+        if img_key in img_set:
+            img = image_tools.read_image(img_set[img_key]["filepath"])
+            self._img_cache[img_key] = img
+            return img
+        img_set_a: dict = self.get("image_set_a", {})
+        if img_key in img_set_a:
+            img = image_tools.read_image(img_set_a[img_key]["filepath"])
+            self._img_cache[img_key] = img
+            return img
+        img_set_b: dict = self.get("image_set_b", {})
+        if img_key in img_set_b:
+            img = image_tools.read_image(img_set_b[img_key]["filepath"])
+            self._img_cache[img_key] = img
+            return img
+        raise KeyError(img_key)

@@ -12,29 +12,9 @@ import json
 import itertools
 import numpy as np
 
+from helpers import DataSource
 from image_tools import transform_and_overlay, read_image, resize_image, write_image
 
-
-class DataSource(dict):
-    def __init__(self, matches_file: (str | PathLike), image_type="Localized", name=""):
-        super().__init__()
-        self.matches_file = matches_file
-        self.update(self._load_data())
-        self.image_type = image_type
-        if name:
-            self.name = name
-        else:
-            self.name = str(matches_file)
-        self.data = None
-
-    def _load_data(self):
-        data = {}
-        with open(self.matches_file, 'r') as file:
-            try:
-                data = json.load(file)
-            except json.JSONDecodeError as e:
-                print(f"Error parsing {self.matches_file}: {e}")
-        return data
 
 
 class LocalizationGraph:

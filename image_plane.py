@@ -34,10 +34,12 @@ class ImagePlane(Primitive):
         )
 
     def _create_mesh(self):
-        if self.primitive.image is str:
+        if type(self.primitive.image) is str:
             image: Image = Image.open(self.primitive.image)
         else:
-            image = Image.fromarray(self.primitive.image.astype('uint8'), 'BGR')
+            imagearr = np.array(self.primitive.image).astype(np.uint8)
+            imagearr = imagearr[...,::-1]  # flip color channel to convert BGR to RGB
+            image = Image.fromarray(imagearr)
         texture_viz = TextureVisuals(np.array([[0., 0.], [1., 0.], [1., 1.], [0., 1.]]), image=image)
         self.visual = texture_viz
         vertices = np.array([[-0.5, -0.5, 0, 0], [0.5, -0.5, 0, 0], [0.5, 0.5, 0, 0], [-0.5, 0.5, 0, 0]])
@@ -51,12 +53,19 @@ class ImagePlane(Primitive):
         self._cache["faces"] = faces
         self._cache["face_normals"] = face_normals
 
-
-if __name__ == '__main__':
+def test():
     import trimesh
-    image_viz = ImagePlane("IMG_6355(1).JPEG")
-    # image_viz = image_viz.apply_transform(trimesh.transformations.rotation_matrix(-np.pi / 2, [0, 1, 0]))
+    image_viz = ImagePlane("example/defect_img/IMG_9280.JPG")
+    import cv2
+    img2 = cv2.imdecode(np.fromfile(str("example/defect_img/IMG_9285.JPG"), np.uint8), cv2.IMREAD_COLOR)
+    image_viz2 = ImagePlane(img2)
+    image_viz2 = image_viz2.apply_transform(trimesh.transformations.translation_matrix([1, 0, 0]))
 
     sc = trimesh.Scene()
     sc.add_geometry(image_viz)
+    sc.add_geometry(image_viz2)
     sc.show()
+
+
+if __name__ == '__main__':
+    test()
