@@ -47,14 +47,18 @@ class XFeatMatcher:
 
             points1, points2, good_matches = self.feature_detector.match_lighterglue(pts1, pts2, 0.82)
             if len(points1) >= self.min_keypoints and len(points2) >= self.min_keypoints and len(good_matches > self.match_threshold):
-                H, inliers = cv2.findHomography(points1, points2, cv2.USAC_MAGSAC, 4., maxIters=700,
+                s1 = np.max(pts1["image_size"])
+                s2 = np.max(pts2["image_size"])
+                K, inliers = cv2.findHomography(points1/s1, points2/s2, cv2.USAC_MAGSAC, 4./s1, maxIters=700,
                                                     confidence=0.995)
-
+                I1 = np.diag([s1, s1, 1])
+                I2 = np.diag([s2, s2, 1])
+                H = (I1 @ K @ np.linalg.inv(I2))
                 kp1 = [cv2.KeyPoint(p[0], p[1], 5) for p in points1]
                 kp2 = [cv2.KeyPoint(p[0], p[1], 5) for p in points2]
                 good_matches = [cv2.DMatch(i, i, 0) for i in range(len(good_matches))]
 
-                return list(zip(kp1, kp2)), good_matches, H
+                return list(zip(kp1, kp2)), good_matches, K
             else:
                 log.debug("Match rejected with %d matches", len(good_matches))
                 return None, None, None

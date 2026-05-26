@@ -81,17 +81,17 @@ class DataSource(dict):
             return self._img_cache[img_key]
         img_set: dict = self.get("image_set", {})
         if img_key in img_set:
-            img = image_tools.read_image(img_set[img_key]["filepath"])
+            img = image_tools.read_image(img_set[img_key]["filepath"], max_size=2048)
             self._img_cache[img_key] = img
             return img
         img_set_a: dict = self.get("image_set_a", {})
         if img_key in img_set_a:
-            img = image_tools.read_image(img_set_a[img_key]["filepath"])
+            img = image_tools.read_image(img_set_a[img_key]["filepath"], max_size=2048)
             self._img_cache[img_key] = img
             return img
         img_set_b: dict = self.get("image_set_b", {})
         if img_key in img_set_b:
-            img = image_tools.read_image(img_set_b[img_key]["filepath"])
+            img = image_tools.read_image(img_set_b[img_key]["filepath"], max_size=2048)
             self._img_cache[img_key] = img
             return img
         raise KeyError(img_key)

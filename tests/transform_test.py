@@ -10,7 +10,7 @@ class TestSum(unittest.TestCase):
     def test_simple_transform(self):
         points = np.array([[0, 0], [0, 1], [0.5, 0.5]], dtype=np.float32)
         m1 = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=np.float32)
-        t_points = image_transformations.transform_point(points, m1)
+        t_points = image_tools.transform_point(points, m1)
         self.assertEqual(points, t_points, "Points should be equal")
 
     def test_sum_tuple(self):

@@ -1,3 +1,5 @@
+import trimesh.transformations
+
 import image_tools
 from extract_images_from_e57 import quaternion_to_euler
 from feature_matching import CrossMatching
@@ -57,25 +59,25 @@ def quaternion_rotation_matrix(Q):
 
     return rot_matrix
 
-"""Author: ChatGPT"""
-def pose_dict_to_matrix(pose_dict):
-    # Extract translation and quaternion
-    t = pose_dict['translation']
-    q = pose_dict['rotation']
-    w, x, y, z = q
-
-    # Normalize quaternion
-    norm = np.sqrt(w**2 + x**2 + y**2 + z**2)
-    w, x, y, z = w/norm, x/norm, y/norm, z/norm
-
-    # Quaternion to rotation matrix
-    R = quaternion_rotation_matrix([w,x,y,z])
-
-    # Compose transformation matrix
-    T = np.eye(4)
-    T[:3, :3] = R
-    T[:3, 3] = t
-    return T
+# """Author: ChatGPT"""
+# def pose_dict_to_matrix(pose_dict):
+#     # Extract translation and quaternion
+#     t = pose_dict['translation']
+#     q = pose_dict['rotation']
+#     x, y, z, w = q
+#
+#     # Normalize quaternion
+#     #norm = np.sqrt(w**2 + x**2 + y**2 + z**2)
+#     #w, x, y, z = w/norm, x/norm, y/norm, z/norm
+#
+#     # Quaternion to rotation matrix
+#     R = quaternion_rotation_matrix([x,y,z,w])
+#
+#     # Compose transformation matrix
+#     T = np.eye(4)
+#     T[:3, :3] = R
+#     T[:3, 3] = t
+#     return T
 
 def rot2eul(R):
     beta = -np.arcsin(R[2,0])
@@ -109,16 +111,16 @@ def dict_to_camera_matrix(cam_dict):
     rw, rx, ry, rz = rw/norm, rx/norm, ry/norm, rz/norm
 
     # Quaternion to rotation matrix
-    R = quaternion_rotation_matrix([rw,rx,ry,rz])
-
-    t = np.array([tx, ty, tz])
+    R = trimesh.transformations.quaternion_matrix([rw,rx,ry,rz])
+    v = np.array([tx, ty, tz])
+    t = trimesh.transformations.translation_matrix(v)
 
     # [R|t] (3x4)
     #Rt = np.hstack((R, t))
 
     # Camera matrix
-    P = K @ R
-    return K, R, t
+    # P = K @ R
+    return K, t @ R, v
 
 from helpers import DataSource
 def visualize(test_file_path, point_cloud_filename):
@@ -159,7 +161,6 @@ def visualize(test_file_path, point_cloud_filename):
         rays.append(ray)
         images.append(img_b)
 
-    # print("relative point:", pan_img_point, pan_img.shape)
     panoramic_point_to_scan.find_rays(
         origins,
         rays,
@@ -169,9 +170,12 @@ def visualize(test_file_path, point_cloud_filename):
         #reference_model_path=model_file_name,
         #reference_model_transform=pose_dict_to_matrix(point_cloud_data["pose"])
     )
+    # scene = panoramic_point_to_scan.visualize_scanners(point_cloud_filename, camera_poses)
+    # scene.show()
+
 
 def match_to_geometry(match, img_a, img_b, camera_poses):
-    mat = match["matrix"]
+    mat = np.array(match["matrix"])
 
     #a_to_b = cv2.warpPerspective(img_b, np.linalg.inv(mat), (img_a.shape[1], img_a.shape[0]))
     #overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
@@ -181,11 +185,14 @@ def match_to_geometry(match, img_a, img_b, camera_poses):
     # print(pts)
 
     # Transform from a to b
-    pan_img_points = np.array([[0.5 * img_b.shape[1],0.5*img_b.shape[0],1]])
+    # pan_img_points = np.array([[0.5 * img_b.shape[0],0.5*img_b.shape[1],0]])
+    pan_img_points = np.array([[img_b.shape[0],img_b.shape[1],0]]) / np.max(img_b.shape[:2]) / 2
     r = np.linalg.inv(mat) @ pan_img_points.T
     r = r / r[2]
-    r_c = (r.T / np.array((img_a.shape[1]*2, img_a.shape[0]*2, 1)) - np.array((0.5,0.5,0))).T  # to cam coords
-    r_c = np.array((-r_c[1, ...], r_c[0, ...], -r_c[2, ...]))
+    # r[2] = 1
+    # r_c = (r.T / np.array((img_a.shape[1]/2, img_a.shape[0]/2, 1)) - np.array((1,1,0))).T  # to cam coords
+    r_c = (r.T * 2 - np.array((1,1,1))).T  # to cam coords
+    r_c = np.array((r_c[1, ...], -r_c[0, ...], -r_c[2, ...]))
     #r[...,2] = -1  # z-Coordinate
     #r[...,1] *= -1  # flip y (because pixels count from the top, but camera doesnt)
     #r_c = r_c.T
@@ -209,7 +216,7 @@ def transform_points(points, scan_img_mat_ext, scan_img_mat_int):
     print("Scan img point: " + str(points))
     print("Scan mat: " + str(scan_img_mat_int) + "\n" + str(scan_img_mat_ext))
     s = np.linalg.inv(scan_img_mat_int) @ points
-    s = scan_img_mat_ext @ s
+    s = trimesh.transformations.transform_points(s.T, scan_img_mat_ext, translate=False).T
     rays = []
     for i in range(s.shape[1]):
         v = s[..., i].reshape(-1)

@@ -10,6 +10,7 @@ import sys
 import cv2
 import numpy as np
 
+import image_tools
 from helpers import NumpyArrayEncoder, KeypointEncoder, multiencoder_factory, DMatchEncoder
 from image_tools import read_images, write_image
 
@@ -127,7 +128,7 @@ def write_match_images(output_dir, img_a, img_a_kpts, img_b, img_b_kpts, match_i
     matched_frame = cv2.drawMatches(img_a, img_a_kpts, img_b, img_b_kpts, matches_mask, None,
                                     matchColor=(0, 200, 0), flags=2)
     write_image(f"{output_dir}/{match_id}_matches.jpg", matched_frame)
-    a_to_b = cv2.warpPerspective(img_b, np.linalg.inv(matrix), (img_a.shape[1], img_a.shape[0]))
+    a_to_b = image_tools.transform_image(img_b, np.linalg.inv(matrix), (img_a.shape[1], img_a.shape[0]))
     write_image(f"{output_dir}/{match_id}_tf.jpg", a_to_b)
     overlay = cv2.addWeighted(img_a, 0.5, a_to_b, 0.5, 0)
     write_image(f"{output_dir}/{match_id}_overlay.jpg", overlay)
@@ -291,13 +292,20 @@ class CrossMatching:
                 self.match_matrix[i_p, i_i] = len(matches) if matches else 0
 
                 if matches is not None:
+                    # Match the other way around because inverting the matrix gives different results sometimes?
+                    try:
+                        _, _, matrix_inv = self.matcher.match_points(img_pts, img_des, img_set_a_pts, img_set_a_des)
+                    except Exception as e:
+                        matrix_inv = np.identity(3)
+
                     match_id = f"m_{i_p}_{i_i}"
                     self.matches.append({
                         "match_id": match_id,
                         "image_a": img_a_id,
                         "image_b": img_b_id,
                         "matches": len(matches),
-                        "matrix": matrix
+                        "matrix": matrix,
+                        "matrix_inv": matrix_inv
                     })
                     log.info("Found match with %d keypoint matches", len(matches))
                     if self.output_dir:

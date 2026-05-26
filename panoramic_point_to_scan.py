@@ -6,14 +6,20 @@ import trimesh
 import trimesh.scene
 import trimesh.viewer
 import trimesh.visual
+import trimesh.path
+import trimesh.path.entities
 from trimesh.transformations import translation_matrix, rotation_matrix, translation_from_matrix
 
 from image_plane import ImagePlane
 
 scanner_viz_scale = 1.5
 
+pc_cache = {}
+
 def _read_e57(pc_e57: pye57.E57, bb_size=-1):
     header = pc_e57.get_header(0)
+    if header.guid in pc_cache:
+        return pc_cache[header.guid]
     print("Point count:", header.point_count)
     print("PC Rotation matrix:", header.rotation_matrix)
     print("PC Translation matrix:", header.translation)
@@ -47,6 +53,7 @@ def _read_e57(pc_e57: pye57.E57, bb_size=-1):
         points = points[points_in_bb]
         colors = colors[points_in_bb]
 
+    pc_cache[header.guid] = (points, colors)
     return points, colors
 
 
@@ -68,7 +75,6 @@ def find_rays(origins: list, rays: list, point_cloud_filename: str, show=False, 
                   reference_model_transform=reference_model_transform)
 
     return [o[0] if o is not None else None for o in out_3d_points]
-
 
 def visualize(pc, rays, out_3d_points, origins, images=None, reference_model_path=None, reference_model_transform=None):
     trimesh.Trimesh()
@@ -159,6 +165,74 @@ def visualize(pc, rays, out_3d_points, origins, images=None, reference_model_pat
 
 #debug_cast_cylinders = []
 
+
+def visualize_scanners(point_cloud_filename: str, scanner_data: dict) -> trimesh.Scene:
+    pc_e57 = pye57.E57(point_cloud_filename)
+    scene: trimesh.scene.Scene = trimesh.scene.Scene()
+
+    points, colors = _read_e57(pc_e57)
+    pc = trimesh.points.PointCloud(points, colors)
+    scene.add_geometry(pc, "pointcloud")
+
+    for scanner_name, scanner in scanner_data.items():
+        origin = scanner["pose"]["translation"]
+        rotation = scanner["pose"]["rotation"]
+        smat = trimesh.transformations.scale_matrix(scanner_viz_scale)
+        tmat = trimesh.transformations.translation_matrix(origin)
+        rmat = trimesh.transformations.quaternion_matrix(rotation)
+        print(f"Placing {scanner_name} at {origin}")
+        mat = tmat @ rmat @ smat
+        laser_scanner_viz = trimesh.load_mesh("example/rtc_360_model.obj")
+        scene.add_geometry(laser_scanner_viz, node_name=scanner_name, transform=mat)
+        # scene.add_geometry(trimesh.path.entities.Text(0,scanner_name, 1), parent_node_name=scanner_name, transform=trimesh.transformations.translation_matrix((0,0,2)))
+
+        # find front img
+        try:
+            front = next(filter(lambda x: x.get("facing", "") == "01_right", scanner["images"]))
+        except StopIteration:
+            continue
+
+        fpose = front["pose"]
+        fquat = (fpose["rw"], fpose["rx"],fpose["ry"], fpose["rz"])
+        ftr = (fpose["tx"], fpose["ty"], fpose["tz"])
+
+        ftmat = trimesh.transformations.translation_matrix(ftr)
+        frmat = trimesh.transformations.quaternion_matrix(fquat)
+
+        fmat = ftmat @ frmat
+
+        xarrow = trimesh.load_path(trimesh.transformations.transform_points([np.array([0,0,0]), np.array([-1,0,0])], fmat))
+        yarrow = trimesh.load_path(trimesh.transformations.transform_points([np.array([0,0,0]), np.array([0,-1,0])], fmat))
+        zarrow = trimesh.load_path(trimesh.transformations.transform_points([np.array([0,0,0]), np.array([0,0,-3])], fmat))
+        print(xarrow.vertices)
+        scene.add_geometry(xarrow, node_name=scanner_name + "_front_x", )
+        scene.add_geometry(yarrow, node_name=scanner_name + "_front_y", )
+        scene.add_geometry(zarrow, node_name=scanner_name + "_front_z", )
+
+        intr = front['intrinsics']
+        fx = intr['focalLengthPixelsX']
+        fy = intr['focalLengthPixelsY']
+        px = intr['imageWidth']
+        py = intr['imageHeight']
+        cx = intr['principalPointX']
+        cy = intr['principalPointY']
+        K = np.array([
+            [fx / px * 2, 0, 0],
+            [0, fy / py * 2, 0],
+            [0, 0, 1]
+        ])
+
+        im_points = np.array([[0,0,-1], [-1,-1,-1], [-1,1,-1], [1,-1,-1], [1,1,-1]])
+        cam_points = (np.linalg.inv(K) @ im_points.T).T
+
+        for c in cam_points:
+            points = trimesh.transformations.transform_points([np.array([0,0,0]), c], fmat)
+            arrow = trimesh.load_path(points)
+            scene.add_geometry(arrow)
+
+    return scene
+
+
 def find_ray(ray, points, scanner_tr):
     # image_dimensions = np.array([8192, 3393])
     # image_point = in_2d_point
@@ -188,7 +262,7 @@ def find_ray(ray, points, scanner_tr):
     n_points_in_cylinder = points_in_cylinder.shape[0]
     if n_points_in_cylinder > 0:
         print("Points in cylinder =", n_points_in_cylinder)
-        point_distance = trimesh.points.point_plane_distance(points_in_cylinder, ray_origin, ray_direction)
+        point_distance = trimesh.points.point_plane_distance(points_in_cylinder, plane_origin=ray_origin, plane_normal=ray_direction)
         closest_points_indices = np.argsort(point_distance)
         closest_point = points_in_cylinder[closest_points_indices[0], ...]
 

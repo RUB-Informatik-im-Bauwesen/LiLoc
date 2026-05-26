@@ -235,8 +235,20 @@ def resize_image(image, max_size):
     return resized_image
 
 
-def transform_image(img: np.ndarray, matrix: np.ndarray):
-    cv2.warpPerspective(img, matrix)
+def transform_image(img: np.ndarray, matrix: np.ndarray, target_image_shape, in_pixel_space=False):
+    if in_pixel_space:
+        m = matrix
+    else:
+        source_size = np.max((img.shape[0], img.shape[1]))
+        target_size = np.max((target_image_shape[0], target_image_shape[1]))
+        m = perspective_matrix_to_image_space(matrix, source_size, target_size)
+    return cv2.warpPerspective(img, m, target_image_shape)
+
+def perspective_matrix_to_image_space(matrix, source_size=2048, target_size=2048):
+    I2 = np.diag([source_size, source_size, 1])
+    I1 = np.diag([target_size, target_size, 1])
+    m = (I1 @ matrix @ np.linalg.inv(I2))
+    return m
 
 def transform_and_overlay(img_a, img_b, matrix):
     a_to_b = cv2.warpPerspective(img_b, matrix, (img_a.shape[1], img_a.shape[0]))
